@@ -89,7 +89,6 @@
                                  (if (not (q/key-pressed?)) 0 (cond (= :right (q/key-as-keyword)) 2 (= :e     (q/key-as-keyword)) 2 (= :d     (q/key-as-keyword)) 2 (= :left  (q/key-as-keyword)) -2 (= :a     (q/key-as-keyword)) -2 :else 0))
                                  (if (not (q/key-pressed?)) 0 (cond (= :down  (q/key-as-keyword)) 2 (= :up   (q/key-as-keyword)) -2 :else 0))
                                  )]
-    ;(js/console.log "hero location" (str (:position hero-location)))
     (let [new-lisp-op     (if (eval-lisp? state) (rand-nth lisp-ops) (:lisp-op state))
           new-lisp-script (if (eval-lisp? state) (lisp/l-eval new-lisp-op lisp-env) (:lisp-script state))
           new-lisp-result (if (eval-lisp? state) (if (original-lisp.core/atom? new-lisp-script) new-lisp-script (:value (eeval new-lisp-script)))  (:lisp-result state))
@@ -114,14 +113,6 @@
   ;; set the fill color
   (q/fill (:color state) 255 255)
 
-  ;;(if (q/key-pressed?) (js/console.log "key " (q/raw-key)))
-  ;;(if (not (empty? (:lisp-result state))) (js/console.log (str "l: " (:lisp-result state))))
-  ;;(if (not (empty? (:lisp-result state))) (js/console.log (str "l: " ((:lisp-result state)))))
-  ;;(js/console.log (type (say (quote (hello there cruel world)))))
-  ;;(if (not (empty? (:lisp-result state))) (js/console.log (js/eval (:lisp-result state))))
-  ;;(if (not (empty? (:lisp-result state))) (js/console.log (first (:lisp-result state))))
-  ;;(if (not (empty? (:lisp-result state))) (js/console.log eeval (say '(hello there))))
-  ;;(if (q/key-pressed?) (js/console.log "ns " (find-ns 'mccarthy-animation.core) ))
   ;;(js/console.log (str "hero: " (:position (:hero state))))
 
   (q/image (:image (:hero state))
@@ -142,7 +133,6 @@
     )
   
   ;; draw the text?
-  ;(q/text (str (:lisp-op state) (if (empty? (:lisp-op state)) nil " => ") (:value (eeval (:lisp-result state)))) 10 300)
   (q/text (str (:lisp-op state) (if (empty? (:lisp-op state)) nil " => ") (:lisp-result state)) 10 300)
   )
 
