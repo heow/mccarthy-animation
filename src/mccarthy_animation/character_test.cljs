@@ -1,14 +1,15 @@
 (ns mccarthy-animation.character-test
   (:require [cljs.test :refer-macros [deftest is testing run-tests]]
-            [mccarthy-animation.character :as char]))
+            [mccarthy-animation.character :as char]
+            [clojure.spec.alpha :as spec]))
 
 (deftest a-test
-  (let [screen-size      {::char/x 255 ::char/y 255} ; 0-255
-        sprite-size      {::char/x 32  ::char/y 32}]
+  (let [screen-size      {:x 255 :y 255} ; 0-255
+        sprite-size      {:x 32  :y 32}]
 
     ;; kid gloves
     (is (= true  (char/move-to? screen-size sprite-size {::char/x 1    ::char/y 1}) ))
-    (is (= true  (char/move-to? screen-size sprite-size {::char/x 64    ::char/y 64}) ))
+    (is (= true  (char/move-to? screen-size sprite-size {::char/x 64   ::char/y 64}) ))
 
     ;; edges, min and max
     (is (= true  (char/move-to? screen-size sprite-size {::char/x 0    ::char/y 0}) ))
@@ -21,12 +22,12 @@
     (is (= false (char/move-to? screen-size sprite-size {::char/x 224  ::char/y 64}) ))  ; 256 - 32
     (is (= false (char/move-to? screen-size sprite-size {::char/x 256  ::char/y 256}) ))
 
-    ;; feed it crap
-    (is (= false  (char/move-to? screen-size sprite-size {}) ))
-    (is (= false  (char/move-to? screen-size sprite-size {::char/x 64 }) ))
-    (is (= false  (char/move-to? screen-size sprite-size {::char/y 64 }) ))
-    (is (= false  (char/move-to? screen-size sprite-size {::char/x "foo" ::char/y 0}) ))
-    (is (= false  (char/move-to? screen-size sprite-size {::char/x 64 ::char/y nil}) ))
+    ;; feed it real crap
+    (try (char/move-to? screen-size sprite-size {})                           (is (= true false)) (catch js/Object e)) 
+    (try (char/move-to? screen-size sprite-size {::char/x 64 })               (is (= true false)) (catch js/Object e)) 
+    (try (char/move-to? screen-size sprite-size {::char/y 64 })               (is (= true false)) (catch js/Object e)) 
+    (try (char/move-to? screen-size sprite-size {::char/x "foo" ::char/y 0})  (is (= true false)) (catch js/Object e)) 
+    (try (char/move-to? screen-size sprite-size {::char/x 64 ::char/y nil})   (is (= true false)) (catch js/Object e)) 
     ))
 
 (cljs.test/run-tests) ; run this from planck

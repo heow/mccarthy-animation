@@ -3,16 +3,14 @@
             [quil.core :as q :include-macros true]
             [quil.middleware :as m]
             [cljs.js :refer [empty-state eval js-eval]]
-            [clojure.spec.alpha :as spec]
-            [mccarthy-animation.character :as char]
+            [mccarthy-animation.character :as hero]
             ))
 
-(def screen-size {::x 320 ::y 320})
-(def sprite-size {::x 64  ::y 64})
+(def screen-size {:x 320 :y 320})
+(def sprite-size {:x 64  :y 64})
 
 (defn say [list-of-symbols]
   (apply str (interpose " " list-of-symbols)))
-
 
 (defn move-up [distance]
   (str "moving up " distance " ..."))
@@ -44,31 +42,16 @@
                '(move-up)
                ])
 
-(spec/def ::x int?)
-(spec/def ::y int?)
-(spec/def ::position (spec/keys :req [::x ::y]))
-
-(comment spec/def ::jcm-lispm (spec/keys :req [::lisp-op
-                                       ::lisp-result
-                                       ::lisp-time]))
-
 (defn move-hero [position x-delta y-delta]
-  (let [x-boundry (- (::x screen-size) (::x sprite-size))
-        y-boundry (::y screen-size)
-        proposed-x (+ (::x position) x-delta)
-        proposed-y (+ (::y position) y-delta)]
+  (let [proposed-x (+ (:x position) x-delta)
+        proposed-y (+ (:y position) y-delta)]
     ;; keep him on-screen
-    {:type :new-position
-     :position {::x (cond (< proposed-x 0) 0
-                         (> proposed-x (- (::x screen-size) (::x sprite-size))) (- (::x screen-size) (::x sprite-size))
-                         :else proposed-x)
-                ::y (cond (< proposed-y 0) 0
-                         (> proposed-y (- (::y screen-size) (::y sprite-size))) (- (::y screen-size) (::y sprite-size))
-                         :else proposed-y)
-                }}))
+    (if (hero/move-to? screen-size sprite-size {::hero/x proposed-x ::hero/y proposed-y})
+      {:position {:x proposed-x :y proposed-y }}
+      {:position position})
+    ))
 
 (defn setup []
-
   (q/frame-rate 30)   ; Set frame rate to 30 frames per second.
   (q/color-mode :hsb) ; Set color mode to HSB (HSV) instead of default RGB.
   
@@ -80,7 +63,7 @@
   {:color 0
    :angle 0
    :bg (q/load-image "resources/background.png")
-   :hero {:position {::x 120 ::y 120}
+   :hero {:position {:x 120 :y 120}
           :image (q/load-image "resources/megaman.png")}
    :lisp-result ""
    :lisp-time 0
@@ -125,10 +108,10 @@
   ;;(js/console.log (str "hero: " (:position (:hero state))))
 
   (q/image (:image (:hero state))
-           (::x (:position (:hero state)))
-           (::y (:position (:hero state)))
-           (::x sprite-size)
-           (::y sprite-size)) ; draw hero
+           (:x (:position (:hero state)))
+           (:y (:position (:hero state)))
+           (:x sprite-size)
+           (:y sprite-size)) ; draw hero
   
   ;; Calculate x and y coordinates of the circle.
   (let [angle (:angle state)
@@ -143,12 +126,12 @@
   
   ;; draw the text?
   (q/text (str (:lisp-op state) (if (empty? (:lisp-op state)) nil " => ") (:lisp-result state)) 10 300)
-  ;;(q/text (str "spec: " (spec/valid? ::position {::x 120 ::y 120})) 10 300)
+  ;;(q/text (str "pos: " (:position (:hero state))) 10 300)
   )
 
 (q/defsketch mccarthy-animation
   :host "mccarthy-animation"
-  :size [(::x screen-size) (::y screen-size)]
+  :size [(:x screen-size) (:y screen-size)]
   :setup setup ; setup function called only once, during sketch initialization.
   :update update-state ; update-state is called on each iteration before draw-state.
   :draw draw-state
@@ -156,6 +139,3 @@
   ;; Check quil wiki for more info about middlewares and particularly
   ;; fun-mode.
   :middleware [m/fun-mode])
-
-
-
