@@ -1,11 +1,8 @@
 (ns mccarthy-animation.character
-  (:require [original-lisp.core :as lisp]
-            [cljs.js :refer [empty-state eval js-eval]]
-            [clojure.spec.alpha :as spec]
-            ))
+  (:require [clojure.spec.alpha :as spec] ))
 
-(spec/def ::x        (spec/and int?)) ; check overflows elsewhere
-(spec/def ::y        (spec/and int?)) ; check overflows elsewhere
+(spec/def ::x        int?) ; check overflows elsewhere
+(spec/def ::y        int?) ; check overflows elsewhere
 (spec/def ::position (spec/keys :req [::x ::y]))
 
 (defn move-to? [screen-size sprite-size new-position]

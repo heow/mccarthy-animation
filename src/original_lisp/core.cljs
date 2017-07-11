@@ -1,8 +1,8 @@
 ;; RIP JCM 2011
-
+;;
 ;; https://github.com/krisajenkins/original-lisp/blob/master/src/original_lisp/core.clj
 ;; http://ldc.upenn.edu/myl/llog/jmc.pdf
-
+;;
 ;; atom, eq, car, cdr, cons, quote, cond, lambda, label
 
 (ns original-lisp.core)

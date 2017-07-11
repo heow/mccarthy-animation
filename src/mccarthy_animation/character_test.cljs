@@ -23,11 +23,11 @@
     (is (= false (char/move-to? screen-size sprite-size {::char/x 256  ::char/y 256}) ))
 
     ;; feed it real crap
-    (try (char/move-to? screen-size sprite-size {})                           (is (= true false)) (catch js/Object e)) 
-    (try (char/move-to? screen-size sprite-size {::char/x 64 })               (is (= true false)) (catch js/Object e)) 
-    (try (char/move-to? screen-size sprite-size {::char/y 64 })               (is (= true false)) (catch js/Object e)) 
-    (try (char/move-to? screen-size sprite-size {::char/x "foo" ::char/y 0})  (is (= true false)) (catch js/Object e)) 
-    (try (char/move-to? screen-size sprite-size {::char/x 64 ::char/y nil})   (is (= true false)) (catch js/Object e)) 
+    (try (char/move-to? screen-size sprite-size {})                           (is (= true false)) (catch js/Object e)) ;; TODO: warning cljs specific
+    (try (char/move-to? screen-size sprite-size {::char/x 64 })               (is (= true false)) (catch js/Object e)) ;; TODO: warning cljs specific
+    (try (char/move-to? screen-size sprite-size {::char/y 64 })               (is (= true false)) (catch js/Object e)) ;; TODO: warning cljs specific
+    (try (char/move-to? screen-size sprite-size {::char/x "foo" ::char/y 0})  (is (= true false)) (catch js/Object e)) ;; TODO: warning cljs specific
+    (try (char/move-to? screen-size sprite-size {::char/x 64 ::char/y nil})   (is (= true false)) (catch js/Object e)) ;; TODO: warning cljs specific
     ))
 
 (cljs.test/run-tests) ; run this from planck

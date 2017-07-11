@@ -1,3 +1,5 @@
 #!/bin/sh
-echo "open this index.html file"
+echo "when built, open this index.html file"
 lein cljsbuild auto
+
+
