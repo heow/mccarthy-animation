@@ -4,6 +4,7 @@
             [quil.middleware :as m]
             [cljs.js :refer [empty-state eval js-eval]]
             [clojure.spec.alpha :as spec]
+            [mccarthy-animation.character :as char]
             ))
 
 (def screen-size {::x 320 ::y 320})
@@ -46,6 +47,10 @@
 (spec/def ::x int?)
 (spec/def ::y int?)
 (spec/def ::position (spec/keys :req [::x ::y]))
+
+(comment spec/def ::jcm-lispm (spec/keys :req [::lisp-op
+                                       ::lisp-result
+                                       ::lisp-time]))
 
 (defn move-hero [position x-delta y-delta]
   (let [x-boundry (- (::x screen-size) (::x sprite-size))
@@ -95,7 +100,7 @@
                                  (if (not (q/key-pressed?)) 0 (cond (= :down  (q/key-as-keyword)) 2 (= :up   (q/key-as-keyword)) -2 :else 0))
                                  )]
     (let [new-lisp-op     (if (eval-lisp? state) (rand-nth lisp-ops) (:lisp-op state))
-          new-lisp-script (if (eval-lisp? state) (lisp/l-eval new-lisp-op lisp-env) (:lisp-script state))
+          new-lisp-script (if (eval-lisp? state) (lisp/l-eval new-lisp-op lisp-env) nil)
           new-lisp-result (if (eval-lisp? state) (if (original-lisp.core/atom? new-lisp-script) new-lisp-script (:value (eeval new-lisp-script)))  (:lisp-result state))
           new-lisp-time   (if (eval-lisp? state) (q/millis) (:lisp-time state))]
       {:color      (mod (+ (:color state) 0.7) 255)
@@ -103,7 +108,6 @@
        :bg         (:bg state)
        :hero       (assoc (:hero state) :position (:position hero-location)) 
        :lisp-op     new-lisp-op
-       :lisp-script new-lisp-script
        :lisp-result new-lisp-result
        :lisp-time   new-lisp-time
        }))
