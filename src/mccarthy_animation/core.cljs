@@ -2,7 +2,6 @@
   (:require [original-lisp.core :as lisp]
             [quil.core :as q :include-macros true]
             [quil.middleware :as m]
-            [cljs.js :refer [empty-state eval js-eval]]
             [mccarthy-animation.character :as hero]
             [mccarthy-animation.lispm :as lispm]
             ))
@@ -15,17 +14,6 @@
 
 (defn move-up [distance]
   (str "moving up " distance " ..."))
-
-;; call up to a local function
-;; TODO: cljs specific
-(defn eval-clojure [clojure-program]
-  (eval (empty-state)
-        clojure-program
-        {:eval       js-eval
-         :source-map true
-         ;; :ns         (find-ns 'mccarthy-animation.core) ; TODO why does this not work?
-         :context    :expr}
-        (fn [result] result)) )
 
 (defn move-hero [position x-delta y-delta]
   (let [proposed-x (+ (:x position) x-delta)
@@ -64,27 +52,26 @@
 
 ;; Hack to determine when we want to evaluate some lisp, checks to see what we are
 ;; and what we're NOT doing.
-(defn eval-lisp? [state keystroke now]
+(defn eval-lisp? [state now keystroke]
   (let [time-at-last-eval (:lisp-time state)]
-    (and (< 1000 (- now time-at-last-eval)) ; wait a second
-         (not (contains? {:right 1 :e 1 :d 1 :left 1 :a 1 :up 1 :down 1 :mouse-click 1}  keystroke)) )))
+    (and (< 1000 (- now time-at-last-eval)) ; wait at least a second
+         (contains? {:right 1 :e 1 :d 1 :left 1 :a 1 :up 1 :down 1 :mouse-click 1}  keystroke))))
 
 (defn update-state [state]
   (let [now           (now)
         keystroke     (get-keystroke-or-mouse)
         hero-location (move-hero (:position (:hero state))
                                  (cond (= :right keystroke) 2 (= :e  keystroke)  2 (= :d keystroke) 2 (= :left keystroke) -2 (= :a keystroke) -2 :else 0)
-                                 (cond (= :down  keystroke) 2 (= :up keystroke) -2 :else 0)
-                                 )]
-    (let [new-lisp-op     (if (eval-lisp? state keystroke now) (rand-nth lispm/operations) (:lisp-op state))
-          new-lisp-script (if (eval-lisp? state keystroke now) (lispm/eval new-lisp-op) nil)
-          new-lisp-result (if (eval-lisp? state keystroke now) (if (original-lisp.core/atom? new-lisp-script) new-lisp-script (:value (eval-clojure new-lisp-script)))  (:lisp-result state))
-          new-lisp-time   (if (eval-lisp? state keystroke now) (q/millis) (:lisp-time state))]
+                                 (cond (= :down  keystroke) 2 (= :up keystroke) -2 :else 0) )]
+    (let [rnd-lisp-op     (if (eval-lisp? state now keystroke) (rand-nth lispm/operations) (:lisp-op state))
+          new-lisp-script (if (eval-lisp? state now keystroke) (lispm/eval rnd-lisp-op) nil)
+          new-lisp-result (if (eval-lisp? state now keystroke) (if (original-lisp.core/atom? new-lisp-script) new-lisp-script (lispm/eval-clojure new-lisp-script)) (:lisp-result state))
+          new-lisp-time   (if (eval-lisp? state now keystroke) now (:lisp-time state))]
       {:color      (mod (+ (:color state) 0.7) 255)
        :angle      (+ (:angle state) 0.01)
        :bg         (:bg state)
        :hero       (assoc (:hero state) :position (:position hero-location)) 
-       :lisp-op     new-lisp-op
+       :lisp-op     rnd-lisp-op
        :lisp-result new-lisp-result
        :lisp-time   new-lisp-time
        }))
