@@ -3,11 +3,10 @@
             [quil.core :as q :include-macros true]
             [quil.middleware :as m]
             [mccarthy-animation.character :as hero]
-            [mccarthy-animation.lispm :as lispm]
-            ))
+            [mccarthy-animation.lispm :as lispm] ))
 
-(def screen-size {:x 320 :y 320})
-(def sprite-size {:x 64  :y 64})
+(defonce screen-size {:x 320 :y 320})
+(defonce sprite-size {:x 64  :y 64})
 
 (defn say [list-of-symbols]
   (apply str (interpose " " list-of-symbols)))
@@ -21,8 +20,7 @@
     ;; keep him on-screen
     (if (hero/move-to? screen-size sprite-size {::hero/x proposed-x ::hero/y proposed-y})
       {:position {:x proposed-x :y proposed-y }}
-      {:position position})
-    ))
+      {:position position}) ))
 
 (defn setup []
   (q/frame-rate 30)   ; Set frame rate to 30 frames per second.
@@ -39,16 +37,14 @@
    :hero {:position {:x 120 :y 120}
           :image (q/load-image "resources/megaman.png")}
    :lisp-result ""
-   :lisp-time 0
-   })
+   :lisp-time 0 })
 
 (defn now [] (q/millis))
 
 (defn get-keystroke-or-mouse []
   (cond (q/key-pressed?) (q/key-as-keyword)
         (q/mouse-pressed?) :mouse-click
-        :else :none
-        ))
+        :else :none))
 
 ;; Hack to determine when we want to evaluate some lisp, checks to see what we are
 ;; and what we're NOT doing.
@@ -79,12 +75,12 @@
   )
 
 (defn draw-state [state]  
-  ;; Clear the sketch by filling it with light-grey color.
-  (q/background 240)
 
+  ;; clear the sketch by filling it with light-grey color.
+  (q/background 240)
   (q/image (:bg state) 0 0)
   
-  ;; set the fill color
+  ;; fill color
   (q/fill (:color state) 255 255)
 
   ;;(js/console.log (str "hero: " (:position (:hero state))))
@@ -95,12 +91,12 @@
            (:x sprite-size)
            (:y sprite-size)) ; draw hero
   
-  ;; Calculate x and y coordinates of the circle.
+  ;; calculate x and y coordinates of the circle.
   (let [angle (:angle state)
         x (* 150 (q/cos angle))
         y (* 150 (q/sin angle))]
     
-    ; Move origin point to the center of the sketch.
+    ;; Move origin point to the center of the sketch.
     (q/with-translation [(/ (q/width) 2)
                          (/ (q/height) 2)]      
       (q/ellipse x y 100 100) ) ; draw the circle
@@ -108,7 +104,6 @@
   
   ;; draw the text?
   (q/text (str (:lisp-op state) (if (empty? (:lisp-op state)) nil " => ") (:lisp-result state)) 10 300)
-  ;;(q/text (str "pos: " (:position (:hero state))) 10 300)
   )
 
 (q/defsketch mccarthy-animation

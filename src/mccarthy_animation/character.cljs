@@ -13,4 +13,3 @@
     (< (::x new-position) 0) false
     (< (::y new-position) 0) false
     :else true))
-

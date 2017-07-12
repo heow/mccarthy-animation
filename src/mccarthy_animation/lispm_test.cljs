@@ -24,7 +24,7 @@
 ;; If you think you're good at meta-programming, try it without support for either
 ;; numbers or strings
 (deftest eval-to-cljs-test
-  (is (= "saying 42" (lispm/eval-clojure (lispm/eval '(say '42) '((say (lambda (x) (cons 'mccarthy-animation.lispm-test.say (cons x '())))))))))
+  (is (= "saying 42" (lispm/eval-clojure (lispm/eval '(speak '42) '((speak (lambda (x) (cons 'mccarthy-animation.lispm-test.say (cons x '())))))))))
   )
 
 (cljs.test/run-tests) ; run this from planck
