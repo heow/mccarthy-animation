@@ -5,6 +5,19 @@
 (spec/def ::y        int?) ; check overflows elsewhere
 (spec/def ::position (spec/keys :req [::x ::y]))
 
+(defonce image-keys   [:stand1 :stand2 :move1 :move2 :move3 :move4])
+(defonce image-counts {:stand 1 :move 4})
+
+(defn create [name images initial-x initial-y]
+  {:name name
+   :images images
+   :animation :stand
+   :sprite-size {:x 0
+                 :y 0}
+   :position {:x initial-x
+              :y initial-y}
+   })
+
 (defn move-to? [screen-size sprite-size new-position]
   {:pre [(spec/valid? ::position new-position)]} ; throw on bogus input
   (cond
@@ -13,3 +26,11 @@
     (< (::x new-position) 0) false
     (< (::y new-position) 0) false
     :else true))
+
+(defn move [screen-size sprite-size position x-delta y-delta]
+  (let [proposed-x (+ (:x position) x-delta)
+        proposed-y (+ (:y position) y-delta)]
+    ;; keep him on-screen
+    (if (move-to? screen-size sprite-size {::x proposed-x ::y proposed-y})
+      {:position {:x proposed-x :y proposed-y }}
+      {:position position}) ))

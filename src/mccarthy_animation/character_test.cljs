@@ -30,4 +30,11 @@
     (try (char/move-to? screen-size sprite-size {::char/x 64 ::char/y nil})   (is (= true false)) (catch js/Object e)) ;; TODO: warning cljs specific
     ))
 
+(deftest create
+  (let [hero (char/create "foo" nil 51 52)]
+    (is (= "foo" (:name hero)))
+    (is (= 51 (:x (:position hero))))
+    (is (= 52 (:y (:position hero))))
+    ))
+
 (cljs.test/run-tests) ; run this from planck

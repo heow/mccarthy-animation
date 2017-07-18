@@ -2,7 +2,7 @@
   (:require [original-lisp.core :as lisp]
             [quil.core :as q :include-macros true]
             [quil.middleware :as m]
-            [mccarthy-animation.character :as hero]
+            [mccarthy-animation.character :as char]
             [mccarthy-animation.lispm :as lispm] ))
 
 (defonce screen-size {:x 320 :y 320})
@@ -14,13 +14,9 @@
 (defn move-up [distance]
   (str "moving up " distance " ..."))
 
-(defn move-hero [position x-delta y-delta]
-  (let [proposed-x (+ (:x position) x-delta)
-        proposed-y (+ (:y position) y-delta)]
-    ;; keep him on-screen
-    (if (hero/move-to? screen-size sprite-size {::hero/x proposed-x ::hero/y proposed-y})
-      {:position {:x proposed-x :y proposed-y }}
-      {:position position}) ))
+(defn load-one-image [image]
+  (let [path (str "resources/" (name image) ".png")]
+    (q/request-image path)))
 
 (defn setup []
   (q/frame-rate 30)   ; Set frame rate to 30 frames per second.
@@ -34,8 +30,7 @@
   {:color 0
    :angle 0
    :bg (q/load-image "resources/background.png")
-   :hero {:position {:x 120 :y 120}
-          :image (q/load-image "resources/megaman.png")}
+   :hero (char/create "fooman" (zipmap char/image-keys (map load-one-image char/image-keys)) 120 120)
    :lisp-result ""
    :lisp-time 0 })
 
@@ -56,23 +51,33 @@
 (defn update-state [state]
   (let [now           (now)
         keystroke     (get-keystroke-or-mouse)
-        hero-location (move-hero (:position (:hero state))
+        hero-location (char/move screen-size sprite-size (:position (:hero state)) 
                                  (cond (= :right keystroke) 2 (= :e  keystroke)  2 (= :d keystroke) 2 (= :left keystroke) -2 (= :a keystroke) -2 :else 0)
-                                 (cond (= :down  keystroke) 2 (= :up keystroke) -2 :else 0) )]
+                                 (cond (= :down  keystroke) 2 (= :up keystroke) -2 :else 0) )
+        hero-animation (cond (= :right keystroke) :move (= :left keystroke) :move
+                             (= :up keystroke)    :move (= :down keystroke) :move
+                             :else :stand)]
     ;; TODO this will go away
     (let [rnd-lisp-op     (if (eval-lisp? state now keystroke) (rand-nth lispm/operations) (:lisp-op state))
           new-lisp-script (if (eval-lisp? state now keystroke) (lispm/eval rnd-lisp-op) nil)
           new-lisp-result (if (eval-lisp? state now keystroke) (if (original-lisp.core/atom? new-lisp-script) new-lisp-script (lispm/eval-clojure new-lisp-script)) (:lisp-result state))
           new-lisp-time   (if (eval-lisp? state now keystroke) now (:lisp-time state))]
+
+      ;; this is the new state
       {:color      (mod (+ (:color state) 0.7) 255)
        :angle      (+ (:angle state) 0.01)
        :bg         (:bg state)
-       :hero       (assoc (:hero state) :position (:position hero-location)) 
+       :hero       (assoc (assoc (:hero state) :position (:position hero-location)) :animation hero-animation)
        :lisp-op     rnd-lisp-op
        :lisp-result new-lisp-result
        :lisp-time   new-lisp-time
        }))
   )
+
+(defn animated-keyword [base-name n speed]
+  (let [s (* speed (/ (q/millis) 1000.0))
+        x (+ 1 (mod (int s) n))]
+    (keyword (str (name base-name) x))))
 
 (defn draw-state [state]  
 
@@ -85,11 +90,17 @@
 
   ;;(js/console.log (str "hero: " (:position (:hero state))))
 
-  (q/image (:image (:hero state))
-           (:x (:position (:hero state)))
-           (:y (:position (:hero state)))
+  (comment q/image (get-in state [:hero :images :stand])
+           (get-in state [:hero :position :x])
+           (get-in state [:hero :position :y])
            (:x sprite-size)
            (:y sprite-size)) ; draw hero
+
+  (q/image (get-in state [:hero :images (animated-keyword (get-in state [:hero :animation]) 2 2.0)])
+           (get-in state [:hero :position :x])
+           (get-in state [:hero :position :y])
+           (:x sprite-size)
+           (:y sprite-size))
   
   ;; calculate x and y coordinates of the circle.
   (let [angle (:angle state)
@@ -103,7 +114,8 @@
     )
   
   ;; draw the text?
-  (q/text (str (:lisp-op state) (if (empty? (:lisp-op state)) nil " => ") (:lisp-result state)) 10 300)
+  ;(q/text (str (:lisp-op state) (if (empty? (:lisp-op state)) nil " => ") (:lisp-result state)) 10 300)
+  (q/text (str "anim: " (get-in state [:hero :animation])) 10 300)
   )
 
 (q/defsketch mccarthy-animation
