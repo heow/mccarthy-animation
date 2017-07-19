@@ -5,17 +5,17 @@
 (spec/def ::y        int?) ; check overflows elsewhere
 (spec/def ::position (spec/keys :req [::x ::y]))
 
-(defonce image-keys   [:stand1 :stand2 :move1 :move2 :move3 :move4])
-(defonce image-counts {:stand 1 :move 4})
+(defonce image-keys   [:stand1 :move1 :move2])
+
+;; {:stand 1 :move 4}
+(defonce image-counts (frequencies (map #(keyword (apply str (take (- (count (name %)) 1) (name %)))) image-keys)))
 
 (defn create [name images initial-x initial-y]
   {:name name
    :images images
    :animation :stand
-   :sprite-size {:x 0
-                 :y 0}
-   :position {:x initial-x
-              :y initial-y}
+   :sprite-size {:x 0 :y 0}
+   :position {:x initial-x :y initial-y}
    })
 
 (defn move-to? [screen-size sprite-size new-position]

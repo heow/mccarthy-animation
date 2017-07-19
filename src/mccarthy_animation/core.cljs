@@ -18,6 +18,9 @@
   (let [path (str "resources/" (name image) ".png")]
     (q/request-image path)))
 
+(defn load-images []
+  (zipmap char/image-keys (map load-one-image char/image-keys))) 120 120
+
 (defn setup []
   (q/frame-rate 30)   ; Set frame rate to 30 frames per second.
   (q/color-mode :hsb) ; Set color mode to HSB (HSV) instead of default RGB.
@@ -30,7 +33,7 @@
   {:color 0
    :angle 0
    :bg (q/load-image "resources/background.png")
-   :hero (char/create "fooman" (zipmap char/image-keys (map load-one-image char/image-keys)) 120 120)
+   :hero (char/create "fooman" (load-images) 120 120)
    :lisp-result ""
    :lisp-time 0 })
 
@@ -96,7 +99,7 @@
            (:x sprite-size)
            (:y sprite-size)) ; draw hero
 
-  (q/image (get-in state [:hero :images (animated-keyword (get-in state [:hero :animation]) 2 2.0)])
+  (q/image (get-in state [:hero :images (animated-keyword (get-in state [:hero :animation]) ((get-in state [:hero :animation]) char/image-counts) 2.0)])
            (get-in state [:hero :position :x])
            (get-in state [:hero :position :y])
            (:x sprite-size)
@@ -115,7 +118,7 @@
   
   ;; draw the text?
   ;(q/text (str (:lisp-op state) (if (empty? (:lisp-op state)) nil " => ") (:lisp-result state)) 10 300)
-  (q/text (str "anim: " (get-in state [:hero :animation])) 10 300)
+  (q/text (str "anim: " (get-in state [:hero :animation]) " count" ((get-in state [:hero :animation]) char/image-counts)) 10 300)
   )
 
 (q/defsketch mccarthy-animation
