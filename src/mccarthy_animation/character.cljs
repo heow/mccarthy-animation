@@ -1,5 +1,6 @@
 (ns mccarthy-animation.character
-  (:require [clojure.spec.alpha :as spec] ))
+  (:require [clojure.spec.alpha :as spec]
+            [quil.core :as q :include-macros true]))
 
 (spec/def ::x        int?) ; check overflows elsewhere
 (spec/def ::y        int?) ; check overflows elsewhere

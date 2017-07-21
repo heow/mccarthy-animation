@@ -98,7 +98,7 @@
            (get-in state [:hero :position :y])
            (:x sprite-size)
            (:y sprite-size)) ; draw hero
-
+  
   (q/image (get-in state [:hero :images (animated-keyword (get-in state [:hero :animation]) ((get-in state [:hero :animation]) char/image-counts) 2.0)])
            (get-in state [:hero :position :x])
            (get-in state [:hero :position :y])
