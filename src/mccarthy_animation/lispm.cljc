@@ -26,17 +26,17 @@
 ;(spec/def ::time      int?)
 ;(spec/def ::state (spec/keys :req [::operation ::result ::time]))
 
-;; call up to a local function, why is eval so hard?
-;; TODO: very cljs specific
+;; call up to a local function  "pappa, why is cljs eval so hard?"
 (defn eval-clojure [clojure-program]
-  (:value #?(:cljs (cljs/eval (cljs/empty-state)
-                     clojure-program
-                     {:eval       cljs/js-eval
-                      :source-map true
-                      ;; :ns         (find-ns 'mccarthy-animation.core) ; TODO why does this not work?
-                      :context    :expr}
-                     (fn [result] result))
-             :clj (clojure.core/eval clojure-program))) )
+  #?(:clj (clojure.core/eval clojure-program)
+     :cljs (:value
+            (cljs/eval (cljs/empty-state)
+                       clojure-program
+                       {:eval       cljs/js-eval
+                        :source-map true
+                        ;; :ns         (find-ns 'mccarthy-animation.core) ; TODO why does this not work?
+                        :context    :expr}
+                       (fn [result] result))) ))
 
 (defn eval
   ([op env-in]

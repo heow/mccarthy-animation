@@ -1,5 +1,5 @@
 (ns mccarthy-animation.core
-  (:gen-class)
+  #?(:clj (:gen-class))
   (:require [original-lisp.core :as lisp]
             [quil.core :as q :include-macros true]
             [quil.middleware :as m]
