@@ -118,8 +118,8 @@
     )
   
   ;; draw the text?
-  ;(q/text (str (:lisp-op state) (if (empty? (:lisp-op state)) nil " => ") (:lisp-result state)) 10 300)
-  (q/text (str "anim: " (get-in state [:hero :animation]) " count" ((get-in state [:hero :animation]) char/image-counts)) 10 300)
+  (q/text (str (:lisp-op state) (if (empty? (:lisp-op state)) nil " => ") (:lisp-result state)) 10 300)
+  ;(q/text (str "anim: " (get-in state [:hero :animation]) " count" ((get-in state [:hero :animation]) char/image-counts)) 10 300)
   )
 
 (q/defsketch mccarthy-animation
@@ -133,5 +133,4 @@
   ;; fun-mode.
   :middleware [m/fun-mode])
 
-(defn -main [& args]
-  (println "App running, look up and enjoy."))
+#?(:clj (defn -main [& args] (println "App running, look up and enjoy."))) 

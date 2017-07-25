@@ -1,8 +1,8 @@
 (ns mccarthy-animation.lispm
   (:require [clojure.spec.alpha :as spec]
             [cljs.js :as cljs] ; TODO warning cljs
-
-            [original-lisp.core :as lisp]))
+            [original-lisp.core :as lisp])
+  #?(:clj (:refer-clojure :exclude [eval])))
 
 (defonce env '((version 1)
                (a 1)
@@ -14,8 +14,8 @@
                (saying1 '(hello there cruel world))
                (saying2 '(oh no not again))
                (get (lambda (x) (car (cons x '()))))
-               (speak   (lambda () (cons 'mccarthy-animation.core.say (cons saying2 '()))))
-               (move-up (lambda () (cons 'mccarthy-animation.core.move-up '(11))))
+               (speak   (lambda () (cons 'mccarthy-animation.core/say (cons saying2 '()))))
+               (move-up (lambda () (cons 'mccarthy-animation.core/move-up '(11))))
                ))
 
 (defonce ops-set #{'speak 'move-up})
@@ -36,7 +36,7 @@
                       ;; :ns         (find-ns 'mccarthy-animation.core) ; TODO why does this not work?
                       :context    :expr}
                      (fn [result] result))
-             :default nil)) ) ;; TODO fixme for clojure
+             :clj (clojure.core/eval clojure-program))) )
 
 (defn eval
   ([op env-in]
