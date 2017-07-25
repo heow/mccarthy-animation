@@ -9,8 +9,14 @@
                  ]
 
   :plugins [[lein-cljsbuild "1.1.5"]]
-  :hooks [leiningen.cljsbuild]
 
+  :main mccarthy-animation.core
+  :aot [mccarthy-animation.core]
+
+  ;; allows cljs to hook into "lein build" / "lein test" etc.
+  ;; unhooked to allow full clojure build
+  ;;  :hooks [leiningen.cljsbuild]
+  
   :cljsbuild {:builds [{:source-paths ["src"]
                         :compiler
                         {:output-to "js/main.js"

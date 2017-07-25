@@ -29,13 +29,14 @@
 ;; call up to a local function, why is eval so hard?
 ;; TODO: very cljs specific
 (defn eval-clojure [clojure-program]
-  (:value (cljs/eval (cljs/empty-state)
+  (:value #?(:cljs (cljs/eval (cljs/empty-state)
                      clojure-program
                      {:eval       cljs/js-eval
                       :source-map true
                       ;; :ns         (find-ns 'mccarthy-animation.core) ; TODO why does this not work?
                       :context    :expr}
-                     (fn [result] result))) )
+                     (fn [result] result))
+             :default nil)) ) ;; TODO fixme for clojure
 
 (defn eval
   ([op env-in]

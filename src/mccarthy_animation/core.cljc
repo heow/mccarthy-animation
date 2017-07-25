@@ -1,4 +1,5 @@
 (ns mccarthy-animation.core
+  (:gen-class)
   (:require [original-lisp.core :as lisp]
             [quil.core :as q :include-macros true]
             [quil.middleware :as m]
@@ -131,3 +132,6 @@
   ;; Check quil wiki for more info about middlewares and particularly
   ;; fun-mode.
   :middleware [m/fun-mode])
+
+(defn -main [& args]
+  (println "App running, look up and enjoy."))
