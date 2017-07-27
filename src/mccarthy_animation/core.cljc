@@ -1,7 +1,7 @@
 (ns mccarthy-animation.core
   #?(:clj (:gen-class))
   (:require [original-lisp.core :as lisp]
-            [quil.core :as q :include-macros true]
+            [quil.core :as quil :include-macros true]
             [quil.middleware :as m]
             [mccarthy-animation.character :as char]
             [mccarthy-animation.lispm :as lispm] ))
@@ -17,32 +17,32 @@
 
 (defn load-one-image [image]
   (let [path (str "resources/" (name image) ".png")]
-    (q/request-image path)))
+    (quil/request-image path)))
 
 (defn load-images []
   (zipmap char/image-keys (map load-one-image char/image-keys))) 120 120
 
 (defn setup []
-  (q/frame-rate 30)   ; Set frame rate to 30 frames per second.
-  (q/color-mode :hsb) ; Set color mode to HSB (HSV) instead of default RGB.
+  (quil/frame-rate 30)   ; Set frame rate to 30 frames per second.
+  (quil/color-mode :hsb) ; Set color mode to HSB (HSV) instead of default RGB.
   
   ;; text
-  (q/text-font (q/create-font "DejaVu Sans" 10 true))
+  (quil/text-font (quil/create-font "DejaVu Sans" 10 true))
 
   ;; setup function returns initial state. It contains
   ;; circle color and position.
   {:color 0
    :angle 0
-   :bg (q/load-image "resources/background.png")
+   :bg (quil/load-image "resources/background.png")
    :hero (char/create "fooman" (load-images) 120 120)
    :lisp-result ""
    :lisp-time 0 })
 
-(defn now [] (q/millis))
+(defn now [] (quil/millis))
 
 (defn get-keystroke-or-mouse []
-  (cond (q/key-pressed?) (q/key-as-keyword)
-        (q/mouse-pressed?) :mouse-click
+  (cond (quil/key-pressed?) (quil/key-as-keyword)
+        (quil/mouse-pressed?) :mouse-click
         :else :none))
 
 ;; Hack to determine when we want to evaluate some lisp, checks to see what we are
@@ -79,28 +79,28 @@
   )
 
 (defn animated-keyword [base-name n speed]
-  (let [s (* speed (/ (q/millis) 1000.0))
+  (let [s (* speed (/ (quil/millis) 1000.0))
         x (+ 1 (mod (int s) n))]
     (keyword (str (name base-name) x))))
 
 (defn draw-state [state]  
 
   ;; clear the sketch by filling it with light-grey color.
-  (q/background 240)
-  (q/image (:bg state) 0 0)
+  (quil/background 240)
+  (quil/image (:bg state) 0 0)
   
   ;; fill color
-  (q/fill (:color state) 255 255)
+  (quil/fill (:color state) 255 255)
 
   ;;(js/console.log (str "hero: " (:position (:hero state))))
 
-  (comment q/image (get-in state [:hero :images :stand])
+  (comment quil/image (get-in state [:hero :images :stand])
            (get-in state [:hero :position :x])
            (get-in state [:hero :position :y])
            (:x sprite-size)
            (:y sprite-size)) ; draw hero
   
-  (q/image (get-in state [:hero :images (animated-keyword (get-in state [:hero :animation]) ((get-in state [:hero :animation]) char/image-counts) 2.0)])
+  (quil/image (get-in state [:hero :images (animated-keyword (get-in state [:hero :animation]) ((get-in state [:hero :animation]) char/image-counts) 2.0)])
            (get-in state [:hero :position :x])
            (get-in state [:hero :position :y])
            (:x sprite-size)
@@ -108,29 +108,48 @@
   
   ;; calculate x and y coordinates of the circle.
   (let [angle (:angle state)
-        x (* 150 (q/cos angle))
-        y (* 150 (q/sin angle))]
+        x (* 150 (quil/cos angle))
+        y (* 150 (quil/sin angle))]
     
     ;; Move origin point to the center of the sketch.
-    (q/with-translation [(/ (q/width) 2)
-                         (/ (q/height) 2)]      
-      (q/ellipse x y 100 100) ) ; draw the circle
+    (quil/with-translation [(/ (quil/width) 2)
+                         (/ (quil/height) 2)]      
+      (quil/ellipse x y 100 100) ) ; draw the circle
     )
   
   ;; draw the text?
-  (q/text (str (:lisp-op state) (if (empty? (:lisp-op state)) nil " => ") (:lisp-result state)) 10 300)
-  ;(q/text (str "anim: " (get-in state [:hero :animation]) " count" ((get-in state [:hero :animation]) char/image-counts)) 10 300)
+  (quil/text (str (:lisp-op state) (if (empty? (:lisp-op state)) nil " => ") (:lisp-result state)) 10 300)
+  ;(quil/text (str "anim: " (get-in state [:hero :animation]) " count" ((get-in state [:hero :animation]) char/image-counts)) 10 300)
   )
 
-(q/defsketch mccarthy-animation
-  :host "mccarthy-animation"
-  :size [(:x screen-size) (:y screen-size)]
-  :setup setup ; setup function called only once, during sketch initialization.
-  :update update-state ; update-state is called on each iteration before draw-state.
-  :draw draw-state
-  ;; This sketch uses functional-mode middleware.
-  ;; Check quil wiki for more info about middlewares and particularly
-  ;; fun-mode.
-  :middleware [m/fun-mode])
+(defonce sketch-opts
+  {:host "mccarthy-animation"
+   :size [(:x screen-size) (:y screen-size)]
+   :setup setup ; setup function called only once, during sketch initialization.
+   :update update-state ; update-state is called on each iteration before draw-state.
+   :no-start true ; disable autostart
+   :draw draw-state
+   :title "McCarthy Animation"
+   ;; This sketch uses functional-mode middleware.
+   ;; Check quil wiki for more info about middlewares and particularly
+   ;; functional mode fun-mode.
+   :middleware [m/fun-mode]})
 
-#?(:clj (defn -main [& args] (println "App running, look up and enjoy."))) 
+;; cljs entry point, yes it's tiresome but can't make macro to work around
+;; TODO think about this
+#?(:cljs
+   (quil/defsketch mccarthy-animation
+     :host (:host sketch-opts)
+     :size (:size sketch-opts)
+     :setup (:setup sketch-opts)
+     :update (:update sketch-opts)
+     :no-start (:no-start sketch-opts)
+     :draw (:draw sketch-opts)
+     :title (:title sketch-opts)
+     :middleware (:middleware sketch-opts) ))
+
+;; clj application entry point
+#?(:clj
+   (defn -main [& args]
+     (println "App running, look up and enjoy.")
+     (quil/sketch sketch-opts) )) 
