@@ -110,7 +110,7 @@
   ;(quil/text (str "anim: " (get-in state [:hero :animation]) " count" ((get-in state [:hero :animation]) char/image-counts)) 10 300)
   )
 
-;; ensure additions are reflected in defsketch call
+;; ensure additions are reflected in sketch calls
 (defonce sketch-opts
   {:host "mccarthy-animation"
    :size [(:x screen-size) (:y screen-size)]
@@ -124,30 +124,13 @@
    ;; functional mode fun-mode.
    :middleware [m/fun-mode]})
 
-;; cljs entry point 
+;; cljs start
 ;; TODO think about how to fix this without macros or a real eval
 #?(:cljs
-   (quil/defsketch mccarthy-animation
-     :host (:host sketch-opts)
-     :size (:size sketch-opts)
-     :setup (:setup sketch-opts)
-     :update (:update sketch-opts)
-     :no-start (:no-start sketch-opts)
-     :draw (:draw sketch-opts)
-     :title (:title sketch-opts)
-     :middleware (:middleware sketch-opts)
-     ))
+   (quil/defsketch mccarthy-animation :host (:host sketch-opts) :size (:size sketch-opts) :setup (:setup sketch-opts) :update (:update sketch-opts) :no-start (:no-start sketch-opts) :draw (:draw sketch-opts) :title (:title sketch-opts) :middleware (:middleware sketch-opts) ))
 
-;; clj application entry point
+;; clj application start
 #?(:clj
    (defn -main [& args]
      (println "App running, look up and enjoy.")
-     (quil/sketch
-      :host (:host sketch-opts)
-      :size (:size sketch-opts)
-      :setup (:setup sketch-opts)
-      :update (:update sketch-opts)
-      :no-start (:no-start sketch-opts)
-      :draw (:draw sketch-opts)
-      :title (:title sketch-opts)
-      :middleware (:middleware sketch-opts)) )) 
+     (quil/sketch :host (:host sketch-opts) :size (:size sketch-opts) :setup (:setup sketch-opts) :update (:update sketch-opts) :no-start (:no-start sketch-opts) :draw (:draw sketch-opts) :title (:title sketch-opts) :middleware (:middleware sketch-opts)) )) 
