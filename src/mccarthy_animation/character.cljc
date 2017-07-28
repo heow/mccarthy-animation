@@ -1,6 +1,6 @@
 (ns mccarthy-animation.character
   (:require [clojure.spec.alpha :as spec]
-            [quil.core :as q :include-macros true]))
+            [quil.core :as quil :include-macros true]))
 
 (spec/def ::x        int?) ; check overflows elsewhere
 (spec/def ::y        int?) ; check overflows elsewhere
@@ -11,13 +11,31 @@
 ;; {:stand 1 :move 4}
 (defonce image-counts (frequencies (map #(keyword (apply str (take (- (count (name %)) 1) (name %)))) image-keys)))
 
-(defn create [name images initial-x initial-y]
+(defn load-one-image [image]
+  (let [path (str "resources/" (name image) ".png")]
+    (quil/request-image path)))
+
+(defn load-images []
+  (zipmap image-keys (map load-one-image image-keys)))
+
+(comment defn create [name images initial-x initial-y]
   {:name name
    :images images
    :animation :stand
    :sprite-size {:x 0 :y 0}
    :position {:x initial-x :y initial-y}
    })
+
+(defn create
+  ([name images initial-x initial-y]
+     {:name name
+      :images images
+      :animation :stand
+      :sprite-size {:x 0 :y 0}
+      :position {:x initial-x :y initial-y}
+      })
+  ([name initial-x initial-y]
+   (create name (load-images) initial-x initial-y)))
 
 (defn move-to? [screen-size sprite-size new-position]
   {:pre [(spec/valid? ::position new-position)]} ; throw on bogus input

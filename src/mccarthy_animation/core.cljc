@@ -15,13 +15,6 @@
 (defn move-up [distance]
   (str "moving up " distance " ..."))
 
-(defn load-one-image [image]
-  (let [path (str "resources/" (name image) ".png")]
-    (quil/request-image path)))
-
-(defn load-images []
-  (zipmap char/image-keys (map load-one-image char/image-keys))) 120 120
-
 (defn setup []
   (quil/frame-rate 30)   ; Set frame rate to 30 frames per second.
   (quil/color-mode :hsb) ; Set color mode to HSB (HSV) instead of default RGB.
@@ -34,7 +27,7 @@
   {:color 0
    :angle 0
    :bg (quil/load-image "resources/background.png")
-   :hero (char/create "fooman" (load-images) 120 120)
+   :hero (char/create "fooman" 120 120)
    :lisp-result ""
    :lisp-time 0 })
 
@@ -85,21 +78,16 @@
 
 (defn draw-state [state]  
 
-  ;; clear the sketch by filling it with light-grey color.
+  ;; clear the sketch by filling it with light-grey
   (quil/background 240)
   (quil/image (:bg state) 0 0)
   
-  ;; fill color
+  ;; bg fill color
   (quil/fill (:color state) 255 255)
 
   ;;(js/console.log (str "hero: " (:position (:hero state))))
 
-  (comment quil/image (get-in state [:hero :images :stand])
-           (get-in state [:hero :position :x])
-           (get-in state [:hero :position :y])
-           (:x sprite-size)
-           (:y sprite-size)) ; draw hero
-  
+  ;; draw hero
   (quil/image (get-in state [:hero :images (animated-keyword (get-in state [:hero :animation]) ((get-in state [:hero :animation]) char/image-counts) 2.0)])
            (get-in state [:hero :position :x])
            (get-in state [:hero :position :y])
@@ -122,6 +110,7 @@
   ;(quil/text (str "anim: " (get-in state [:hero :animation]) " count" ((get-in state [:hero :animation]) char/image-counts)) 10 300)
   )
 
+;; ensure additions are reflected in defsketch call
 (defonce sketch-opts
   {:host "mccarthy-animation"
    :size [(:x screen-size) (:y screen-size)]
@@ -135,8 +124,8 @@
    ;; functional mode fun-mode.
    :middleware [m/fun-mode]})
 
-;; cljs entry point, yes it's tiresome but can't make macro to work around
-;; TODO think about this
+;; cljs entry point 
+;; TODO think about how to fix this without macros or a real eval
 #?(:cljs
    (quil/defsketch mccarthy-animation
      :host (:host sketch-opts)
@@ -146,10 +135,19 @@
      :no-start (:no-start sketch-opts)
      :draw (:draw sketch-opts)
      :title (:title sketch-opts)
-     :middleware (:middleware sketch-opts) ))
+     :middleware (:middleware sketch-opts)
+     ))
 
 ;; clj application entry point
 #?(:clj
    (defn -main [& args]
      (println "App running, look up and enjoy.")
-     (quil/sketch sketch-opts) )) 
+     (quil/sketch
+      :host (:host sketch-opts)
+      :size (:size sketch-opts)
+      :setup (:setup sketch-opts)
+      :update (:update sketch-opts)
+      :no-start (:no-start sketch-opts)
+      :draw (:draw sketch-opts)
+      :title (:title sketch-opts)
+      :middleware (:middleware sketch-opts)) )) 
