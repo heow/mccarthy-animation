@@ -14,8 +14,11 @@
                (saying1 '(hello there cruel world))
                (saying2 '(oh no not again))
                (get (lambda (x) (car (cons x '()))))
-               (speak   (lambda () (cons 'mccarthy-animation.core/say (cons saying2 '()))))
-               (move-up (lambda () (cons 'mccarthy-animation.core/move-up '(11))))
+               ;; TODO unfuck this
+               #?(:cljs (speak   (lambda () (cons 'mccarthy-animation.core.say (cons saying2 '())))))
+               #?(:clj  (speak   (lambda () (cons 'mccarthy-animation.core/say (cons saying2 '())))))
+               #?(:cljs (move-up (lambda () (cons 'mccarthy-animation.core.move-up '(11)))))
+               #?(:clj  (move-up (lambda () (cons 'mccarthy-animation.core/move-up '(11)))))
                ))
 
 (defonce ops-set #{'speak 'move-up})

@@ -11,20 +11,28 @@
 ;; {:stand 1 :move 4}
 (defonce image-counts (frequencies (map #(keyword (apply str (take (- (count (name %)) 1) (name %)))) image-keys)))
 
-(defn load-one-image [image]
+(defn- load-one-image [image]
   (let [path (str "resources/" (name image) ".png")]
     (quil/request-image path)))
 
-(defn load-images []
+(defn- load-images []
   (zipmap image-keys (map load-one-image image-keys)))
 
-(comment defn create [name images initial-x initial-y]
-  {:name name
-   :images images
-   :animation :stand
-   :sprite-size {:x 0 :y 0}
-   :position {:x initial-x :y initial-y}
-   })
+(defn get-animation-state [keystroke]
+  (cond (= :right keystroke) :move
+        (= :left  keystroke) :move
+        (= :up    keystroke) :move
+        (= :down  keystroke) :move
+        :else                :stand))
+
+(defn- animated-keyword [base-name n speed]
+  (let [s (* speed (/ (quil/millis) 1000.0))
+        x (+ 1 (mod (int s) n))]
+    (keyword (str (name base-name) x))))
+
+(defn get-image [hero]
+  (let [animation (get-in hero [:animation])]
+    (get-in hero [:images (animated-keyword animation (animation image-counts) 2.0)])))
 
 (defn create
   ([name images initial-x initial-y]

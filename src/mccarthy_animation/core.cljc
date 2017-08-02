@@ -50,10 +50,7 @@
         keystroke     (get-keystroke-or-mouse)
         hero-location (char/move screen-size sprite-size (:position (:hero state)) 
                                  (cond (= :right keystroke) 2 (= :e  keystroke)  2 (= :d keystroke) 2 (= :left keystroke) -2 (= :a keystroke) -2 :else 0)
-                                 (cond (= :down  keystroke) 2 (= :up keystroke) -2 :else 0) )
-        hero-animation (cond (= :right keystroke) :move (= :left keystroke) :move
-                             (= :up keystroke)    :move (= :down keystroke) :move
-                             :else :stand)]
+                                 (cond (= :down  keystroke) 2 (= :up keystroke) -2 :else 0) )]
     ;; TODO this will go away
     (let [rnd-lisp-op     (if (eval-lisp? state now keystroke) (rand-nth lispm/operations) (:lisp-op state))
           new-lisp-script (if (eval-lisp? state now keystroke) (lispm/eval rnd-lisp-op) nil)
@@ -64,17 +61,14 @@
       {:color      (mod (+ (:color state) 0.7) 255)
        :angle      (+ (:angle state) 0.01)
        :bg         (:bg state)
-       :hero       (assoc (assoc (:hero state) :position (:position hero-location)) :animation hero-animation)
+       :hero       (-> (:hero state)
+                       (assoc ,,, :position (:position hero-location))
+                       (assoc ,,, :animation (char/get-animation-state keystroke)) )
        :lisp-op     rnd-lisp-op
        :lisp-result new-lisp-result
        :lisp-time   new-lisp-time
        }))
   )
-
-(defn animated-keyword [base-name n speed]
-  (let [s (* speed (/ (quil/millis) 1000.0))
-        x (+ 1 (mod (int s) n))]
-    (keyword (str (name base-name) x))))
 
 (defn draw-state [state]  
 
@@ -88,7 +82,7 @@
   ;;(js/console.log (str "hero: " (:position (:hero state))))
 
   ;; draw hero
-  (quil/image (get-in state [:hero :images (animated-keyword (get-in state [:hero :animation]) ((get-in state [:hero :animation]) char/image-counts) 2.0)])
+  (quil/image (char/get-image (:hero state))
            (get-in state [:hero :position :x])
            (get-in state [:hero :position :y])
            (:x sprite-size)
