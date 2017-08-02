@@ -77,7 +77,7 @@
   (quil/image (:bg state) 0 0)
   
   ;; bg fill color
-  (quil/fill (:color state) 255 255)
+  ;(quil/fill (:color state) 255 255)
 
   ;;(js/console.log (str "hero: " (:position (:hero state))))
 
@@ -90,13 +90,13 @@
   
   ;; calculate x and y coordinates of the circle.
   (let [angle (:angle state)
-        x (* 150 (quil/cos angle))
-        y (* 150 (quil/sin angle))]
+        x (* 50 (quil/cos angle)) ; distance from center
+        y (* 50 (quil/sin angle))]
     
-    ;; Move origin point to the center of the sketch.
-    (quil/with-translation [(/ (quil/width) 2)
-                         (/ (quil/height) 2)]      
-      (quil/ellipse x y 100 100) ) ; draw the circle
+    ;; Move origin point to the center of the hero
+    (quil/with-translation [(get-in state [:hero :position :x]) (get-in state [:hero :position :y])]      
+      (quil/ellipse x y 16 16) ; ball size
+      )
     )
   
   ;; draw the text?
