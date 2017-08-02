@@ -88,10 +88,12 @@
            (:x sprite-size)
            (:y sprite-size))
   
-  ;; calculate x and y coordinates of the circle.
-  (let [angle (:angle state)
-        x (* 50 (quil/cos angle)) ; distance from center
-        y (* 50 (quil/sin angle))]
+  ;; parametric equation of an elipse
+  (let [x-radius 50
+        y-radius 20
+        angle (:angle state)
+        x (* x-radius (quil/cos angle))
+        y (* y-radius (quil/sin angle))]
     
     ;; Move origin point to the center of the hero
     (quil/with-translation [(get-in state [:hero :position :x]) (get-in state [:hero :position :y])]      
