@@ -39,7 +39,6 @@
      {:name name
       :images images
       :animation :stand
-      :sprite-size {:x 0 :y 0}
       :position {:x initial-x :y initial-y}
       })
   ([name initial-x initial-y]
