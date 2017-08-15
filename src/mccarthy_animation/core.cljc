@@ -1,13 +1,13 @@
 (ns mccarthy-animation.core
   #?(:clj (:gen-class))
-  (:require [original-lisp.core :as lisp]
-            [quil.core :as quil :include-macros true]
-            [quil.middleware :as m]
+  (:require [quil.core                    :as quil :include-macros true]
+            [quil.middleware              :as quilm]
             [mccarthy-animation.character :as char]
-            [mccarthy-animation.lispm :as lispm] ))
+            [mccarthy-animation.ball      :as ball]
+            [mccarthy-animation.lispm     :as lispm]
+            [original-lisp.core           :as lisp]))
 
 (defonce screen-size {:x 320 :y 320})
-(defonce sprite-size {:x 64  :y 64})
 
 (defn say [list-of-symbols]
   (apply str (interpose " " list-of-symbols)))
@@ -28,8 +28,7 @@
    :angle 0
    :bg (quil/load-image "resources/background.png")
    :hero (char/create "fooman" 120 120)
-   :ball {:target-angle 0
-          :position     {:x 1 :y 100} }
+   :ball {:position     {:x 1 :y 100} }
    :lisp-result ""
    :lisp-time 0 })
 
@@ -50,20 +49,22 @@
 (defn update-state [state]
   (let [now           (now)
         keystroke     (get-keystroke-or-mouse)
-        hero-location (char/move screen-size sprite-size (:position (:hero state)) 
+        hero-location (char/move screen-size (get-in state [:hero :size]) (get-in state [:hero :position])
                                  (cond (= :right keystroke) 2 (= :e  keystroke)  2 (= :d keystroke) 2 (= :left keystroke) -2 (= :a keystroke) -2 :else 0)
                                  (cond (= :down  keystroke) 2 (= :up keystroke) -2 :else 0) )]
 
     ;; aim toward hero
-    (let [speed 1.5
-          hx (get-in state [:hero :position :x])
-          hy (get-in state [:hero :position :y])
-          bx (get-in state [:ball :position :x])
-          by (get-in state [:ball :position :y])
-          target-angle (quil/atan2  (quil/abs (- hy by)) (quil/abs (- hx bx)))
-          ball-new-x (if (> hx bx) (+ bx (* speed (quil/cos target-angle))) (- bx (* speed (quil/cos target-angle))))
-          ball-new-y (if (> hy by) (+ by (* speed (quil/sin target-angle))) (- by (* speed (quil/sin target-angle))))
-          ]
+    (let [x-radius 50
+          y-radius 20
+          angle (:angle state)
+          x (* x-radius (quil/cos angle))
+          y (* y-radius (quil/sin angle))
+
+          [ball-new-x  ball-new-y] (ball/aim-at
+                                    (get-in state [:ball :position]) {:x (+ x
+                                                                            (get-in state [:hero :position :x])
+                                                                            (/ (get-in state [:hero :size :x]) 2))
+                                                                      :y (+ y (get-in state [:hero :position :y]))})]
       
       ;; TODO this will go away
       (let [rnd-lisp-op     (if (eval-lisp? state now keystroke) (rand-nth lispm/operations) (:lisp-op state))
@@ -80,7 +81,6 @@
                          (assoc ,,, :animation (char/get-animation-state keystroke)) )
          :ball       (-> (:ball state)
                          (assoc ,,, :position {:x ball-new-x :y ball-new-y})
-                         (assoc ,,, :target-angle target-angle)
                          )
          :lisp-op     rnd-lisp-op
          :lisp-result new-lisp-result
@@ -102,35 +102,11 @@
   (quil/image (char/get-image (:hero state))
            (get-in state [:hero :position :x])
            (get-in state [:hero :position :y])
-           (:x sprite-size)
-           (:y sprite-size))
+           (get-in state [:hero :size :x])
+           (get-in state [:hero :size :y]) )
 
+  ;; parametric equation of an elipse
   (let [x-radius 50
-        y-radius 20
-        angle (:angle state)
-        x (* x-radius (quil/cos angle))
-        y (* y-radius (quil/sin angle))]
-    
-    ;; origin ball
-    (comment quil/with-translation [(get-in state [:ball :position :x]) (get-in state [:ball :position :y])]
-      ;; angle to hero
-      (let [target-angle0 (quil/atan2 (get-in state [:hero :position :x]) (get-in state [:hero :position :y]))
-            target-angle (quil/atan2 200 10)
-            new-x (quil/cos target-angle)
-            new-y (quil/sin target-angle)]
-        (quil/ellipse (+ 20 new-x) (+ 20 new-y) 16 16) ; ball size
-        (quil/text (str " target-angle " target-angle) 20 20)
-        ))
-
-    ;; origin hero
-    (comment quil/with-translation [(+ (get-in state [:hero :position :x])
-                               (/ (:x sprite-size) 2))
-                            (get-in state [:hero :position :y])]      
-      (quil/ellipse x y 16 16) ; ball size
-      )) 
-
-  (comment let [
-        x-radius 50
         y-radius 20
         angle (:angle state)
         x (* x-radius (quil/cos angle))
@@ -138,12 +114,13 @@
     
     ;; origin hero center-top
     (quil/with-translation [(+ (get-in state [:hero :position :x])
-                               (/ (:x sprite-size) 2))
+                               (/ (get-in state [:hero :size :x]) 2))
                             (get-in state [:hero :position :y])]      
       (quil/ellipse x y 16 16) ; ball size
       )
     )
-  ;; parametric equation of an elipse
+
+  ;; draw ball
   (quil/ellipse (get-in state [:ball :position :x]) (get-in state [:ball :position :y]) 16 16) ; ball size
   
   ;; draw the text?
@@ -164,7 +141,7 @@
    ;; This sketch uses functional-mode middleware.
    ;; Check quil wiki for more info about middlewares and particularly
    ;; functional mode fun-mode.
-   :middleware [m/fun-mode]})
+   :middleware [quilm/fun-mode]})
 
 ;; cljs start
 ;; TODO think about how to fix this without macros or a real eval

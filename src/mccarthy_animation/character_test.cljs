@@ -31,7 +31,7 @@
     ))
 
 (deftest create
-  (let [hero (char/create "foo" nil 51 52)]
+  (let [hero (char/create "foo" nil 51 52 0 0)]
     (is (= "foo" (:name hero)))
     (is (= 51 (:x (:position hero))))
     (is (= 52 (:y (:position hero))))

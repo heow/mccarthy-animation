@@ -35,14 +35,15 @@
     (get-in hero [:images (animated-keyword animation (animation image-counts) 2.0)])))
 
 (defn create
-  ([name images initial-x initial-y]
+  ([name images initial-x initial-y size-x size-y]
      {:name name
       :images images
       :animation :stand
       :position {:x initial-x :y initial-y}
+      :size {:x size-x :y size-y}
       })
   ([name initial-x initial-y]
-   (create name (load-images) initial-x initial-y)))
+   (create name (load-images) initial-x initial-y 64 64)))
 
 (defn move-to? [screen-size sprite-size new-position]
   {:pre [(spec/valid? ::position new-position)]} ; throw on bogus input
