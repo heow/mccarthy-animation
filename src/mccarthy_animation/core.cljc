@@ -28,7 +28,7 @@
    :angle 0
    :bg (quil/load-image "resources/background.png")
    :hero (char/create "fooman" 120 120)
-   :balls (repeatedly (+ 1 (rand-int 3)) #(ball/create "ball" (:x screen-size) (:y screen-size)))
+   :balls (repeatedly (+ 2 (rand-int 5)) #(ball/create "ball" (:x screen-size) (:y screen-size)))
    :lisp-result ""
    :lisp-time 0 })
 
@@ -53,13 +53,8 @@
                                  (cond (= :right keystroke) 2 (= :e  keystroke)  2 (= :d keystroke) 2 (= :left keystroke) -2 (= :a keystroke) -2 :else 0)
                                  (cond (= :down  keystroke) 2 (= :up keystroke) -2 :else 0) )]
 
-    ;; aim toward hero
-    (let [angle (:angle state)
-          target-x (+ (* 50 (quil/cos angle)) ; elipse
-                      (get-in state [:hero :position :x]) ; hero x
-                      (/ (get-in state [:hero :size :x]) 2)) ; 50% of hero y
-          target-y (+ (* 20 (quil/sin angle))
-                      (get-in state [:hero :position :y]))]
+    ;; aim toward hero orbit (with offset for each one)
+    (let [angle (:angle state)]
       
       ;; TODO this will go away
       (let [rnd-lisp-op     (if (eval-lisp? state now keystroke) (rand-nth lispm/operations) (:lisp-op state))
@@ -69,12 +64,12 @@
         
         ;; this is the new state
         {:color      (mod (+ (:color state) 0.7) 255)
-         :angle      (+ (:angle state) 0.01)
+         :angle      (+ (:angle state) ball/angle-speed)
          :bg         (:bg state)
          :hero       (-> (:hero state)
                          (assoc ,,, :position (:position hero-location))
                          (assoc ,,, :animation (char/get-animation-state keystroke)) )
-         :balls (map #(assoc % :position (ball/aim-at (:position %) {:x target-x :y target-y }))
+         :balls (map #(assoc % :position (ball/aim-at (:position %) (ball/calculate-orbit-target angle (:hero state) %)))
                      (:balls state))
 
          :lisp-op     rnd-lisp-op
@@ -101,7 +96,7 @@
            (get-in state [:hero :size :y]) )
 
   ;; uncomment to see path of parametric equation of an elipse
-  (let [angle (:angle state)
+  (comment let [angle (:angle state)
         x (* 50 (quil/cos angle)) 
         y (* 20 (quil/sin angle))]
     
