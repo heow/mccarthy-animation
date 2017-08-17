@@ -28,7 +28,7 @@
    :angle 0
    :bg (quil/load-image "resources/background.png")
    :hero (char/create "fooman" 120 120)
-   :ball {:position     {:x 1 :y 100} }
+   :balls (repeatedly (+ 1 (rand-int 3)) #(ball/create "ball" (:x screen-size) (:y screen-size)))
    :lisp-result ""
    :lisp-time 0 })
 
@@ -54,17 +54,12 @@
                                  (cond (= :down  keystroke) 2 (= :up keystroke) -2 :else 0) )]
 
     ;; aim toward hero
-    (let [x-radius 50
-          y-radius 20
-          angle (:angle state)
-          x (* x-radius (quil/cos angle))
-          y (* y-radius (quil/sin angle))
-
-          [ball-new-x  ball-new-y] (ball/aim-at
-                                    (get-in state [:ball :position]) {:x (+ x
-                                                                            (get-in state [:hero :position :x])
-                                                                            (/ (get-in state [:hero :size :x]) 2))
-                                                                      :y (+ y (get-in state [:hero :position :y]))})]
+    (let [angle (:angle state)
+          target-x (+ (* 50 (quil/cos angle)) ; elipse
+                      (get-in state [:hero :position :x]) ; hero x
+                      (/ (get-in state [:hero :size :x]) 2)) ; 50% of hero y
+          target-y (+ (* 20 (quil/sin angle))
+                      (get-in state [:hero :position :y]))]
       
       ;; TODO this will go away
       (let [rnd-lisp-op     (if (eval-lisp? state now keystroke) (rand-nth lispm/operations) (:lisp-op state))
@@ -79,9 +74,9 @@
          :hero       (-> (:hero state)
                          (assoc ,,, :position (:position hero-location))
                          (assoc ,,, :animation (char/get-animation-state keystroke)) )
-         :ball       (-> (:ball state)
-                         (assoc ,,, :position {:x ball-new-x :y ball-new-y})
-                         )
+         :balls (map #(assoc % :position (ball/aim-at (:position %) {:x target-x :y target-y }))
+                     (:balls state))
+
          :lisp-op     rnd-lisp-op
          :lisp-result new-lisp-result
          :lisp-time   new-lisp-time
@@ -105,26 +100,24 @@
            (get-in state [:hero :size :x])
            (get-in state [:hero :size :y]) )
 
-  ;; parametric equation of an elipse
-  (let [x-radius 50
-        y-radius 20
-        angle (:angle state)
-        x (* x-radius (quil/cos angle))
-        y (* y-radius (quil/sin angle))]
+  ;; uncomment to see path of parametric equation of an elipse
+  (let [angle (:angle state)
+        x (* 50 (quil/cos angle)) 
+        y (* 20 (quil/sin angle))]
     
     ;; origin hero center-top
-    (quil/with-translation [(+ (get-in state [:hero :position :x])
-                               (/ (get-in state [:hero :size :x]) 2))
-                            (get-in state [:hero :position :y])]      
-      (quil/ellipse x y 16 16) ; ball size
-      )
-    )
+    (quil/with-translation [(+ (get-in state [:hero :position :x]) (/ (get-in state [:hero :size :x]) 2)) (get-in state [:hero :position :y])]
+      (quil/ellipse x y 16 16)))
 
-  ;; draw ball
-  (quil/ellipse (get-in state [:ball :position :x]) (get-in state [:ball :position :y]) 16 16) ; ball size
-  
+  ;; draw all balls
+  (let [ball-size-x 16 ball-size-y 16]
+    (dorun ;; drawing is I/O and is side-effect, force it to run
+      (map #(quil/ellipse (get-in % [:position :x])
+                          (get-in % [:position :y]) ball-size-x ball-size-y)
+           (:balls state))))
+   
   ;; draw the text?
-  (quil/text (str (:ball state)) 10 300)
+  ;(quil/text (:balls state) 10 300)
   ;(quil/text (str (:lisp-op state) (if (empty? (:lisp-op state)) nil " => ") (:lisp-result state)) 10 300)
   ;(quil/text (str "anim: " (get-in state [:hero :animation]) " count" ((get-in state [:hero :animation]) char/image-counts)) 10 300)
   )
