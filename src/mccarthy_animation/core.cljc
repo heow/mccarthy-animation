@@ -20,7 +20,7 @@
   (quil/color-mode :hsb) ; Set color mode to HSB (HSV) instead of default RGB.
   
   ;; text
-  (quil/text-font (quil/create-font "DejaVu Sans" 10 true))
+  (quil/text-font (quil/create-font "DejaVu Sans" 64 true))
 
   ;; setup function returns initial state. It contains
   ;; circle color and position.
@@ -87,6 +87,9 @@
   ;(quil/fill (:color state) 255 255)
 
   ;;(js/console.log (str "hero: " (:position (:hero state))))
+
+  ;; hard-code the sizes in pixels, it's the only way to fly in 1983
+  (quil/text (str (let [h (str (quil/hour))] (if (= 1 (count h)) (str " " h) h)) ":" (let [m (str (quil/minute))] (if (= 1 (count m)) (str "0" m) m))) 135 70)
 
   ;; draw hero
   (quil/image (char/get-image (:hero state))
