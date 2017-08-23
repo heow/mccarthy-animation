@@ -20,7 +20,9 @@
   (quil/color-mode :hsb) ; Set color mode to HSB (HSV) instead of default RGB.
   
   ;; text
-  (quil/text-font (quil/create-font "DejaVu Sans" 64 true))
+  ;; sans-serif serif monopace fantasy cursive 
+  ;;(quil/text-font (quil/create-font "sans-serif" 64 true))
+  (quil/text-font (quil/create-font "resources/PressStart2P-Regular.ttf" 48))
 
   ;; setup function returns initial state. It contains
   ;; circle color and position.
@@ -88,8 +90,11 @@
 
   ;;(js/console.log (str "hero: " (:position (:hero state))))
 
-  ;; hard-code the sizes in pixels, it's the only way to fly in 1983
-  (quil/text (str (let [h (str (quil/hour))] (if (= 1 (count h)) (str " " h) h)) ":" (let [m (str (quil/minute))] (if (= 1 (count m)) (str "0" m) m))) 135 70)
+  ;; right
+  ;;(quil/text (str (let [h (str (quil/hour))] (if (= 1 (count h)) (str "  " h) h)) ":" (let [m (str (quil/minute))] (if (= 1 (count m)) (str "0" m) m))) 135 70)
+
+  ;; left aligned, hard-code the sizes in pixels, it's the only way to fly in 1983
+  (quil/text (str (quil/hour) ":" (let [m (str (quil/minute))] (if (= 1 (count m)) (str "0" m) m))) 25 70)
 
   ;; draw hero
   (quil/image (char/get-image (:hero state))
@@ -115,6 +120,7 @@
            (:balls state))))
    
   ;; draw the text?
+  ;(quil/text (str "fonts: " (count (quil/available-fonts))) 10 300)
   ;(quil/text (:balls state) 10 300)
   ;(quil/text (str (:lisp-op state) (if (empty? (:lisp-op state)) nil " => ") (:lisp-result state)) 10 300)
   ;(quil/text (str "anim: " (get-in state [:hero :animation]) " count" ((get-in state [:hero :animation]) char/image-counts)) 10 300)
