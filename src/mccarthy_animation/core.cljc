@@ -19,10 +19,10 @@
   (quil/frame-rate 30)   ; Set frame rate to 30 frames per second.
   (quil/color-mode :hsb) ; Set color mode to HSB (HSV) instead of default RGB.
   
-  ;; text
-  ;; sans-serif serif monopace fantasy cursive 
+  ;; text options: sans-serif serif monopace fantasy cursive 
   ;;(quil/text-font (quil/create-font "sans-serif" 64 true))
-  (quil/text-font (quil/create-font "resources/PressStart2P-Regular.ttf" 48))
+  ;(quil/text-font (quil/create-font "resources/PressStart2P-Regular.ttf" 18))
+  (quil/text-font (quil/create-font "resources/VT323-Regular.ttf" 18))
 
   ;; setup function returns initial state. It contains
   ;; circle color and position.
@@ -85,16 +85,16 @@
   (quil/background 240)
   (quil/image (:bg state) 0 0)
   
-  ;; bg fill color
-  ;(quil/fill (:color state) 255 255)
-
   ;;(js/console.log (str "hero: " (:position (:hero state))))
 
-  ;; right
-  ;;(quil/text (str (let [h (str (quil/hour))] (if (= 1 (count h)) (str "  " h) h)) ":" (let [m (str (quil/minute))] (if (= 1 (count m)) (str "0" m) m))) 135 70)
-
   ;; left aligned, hard-code the sizes in pixels, it's the only way to fly in 1983
-  (quil/text (str (quil/hour) ":" (let [m (str (quil/minute))] (if (= 1 (count m)) (str "0" m) m))) 25 70)
+  (quil/text-size 48)
+  (quil/text-align :left)
+  (quil/text (str (quil/hour) ":" (let [m (str (quil/minute))] (if (= 1 (count m)) (str "0" m) m))) 25 60)
+
+  (quil/text-size 28)
+  (quil/text-align :right)
+  (quil/text (str (quil/month) "/" (quil/day)) 300 45)
 
   ;; draw hero
   (quil/image (char/get-image (:hero state))
@@ -102,15 +102,6 @@
            (get-in state [:hero :position :y])
            (get-in state [:hero :size :x])
            (get-in state [:hero :size :y]) )
-
-  ;; uncomment to see path of parametric equation of an elipse
-  (comment let [angle (:angle state)
-        x (* 50 (quil/cos angle)) 
-        y (* 20 (quil/sin angle))]
-    
-    ;; origin hero center-top
-    (quil/with-translation [(+ (get-in state [:hero :position :x]) (/ (get-in state [:hero :size :x]) 2)) (get-in state [:hero :position :y])]
-      (quil/ellipse x y 16 16)))
 
   ;; draw all balls
   (let [ball-size-x 16 ball-size-y 16]
@@ -120,7 +111,6 @@
            (:balls state))))
    
   ;; draw the text?
-  ;(quil/text (str "fonts: " (count (quil/available-fonts))) 10 300)
   ;(quil/text (:balls state) 10 300)
   ;(quil/text (str (:lisp-op state) (if (empty? (:lisp-op state)) nil " => ") (:lisp-result state)) 10 300)
   ;(quil/text (str "anim: " (get-in state [:hero :animation]) " count" ((get-in state [:hero :animation]) char/image-counts)) 10 300)
@@ -149,4 +139,4 @@
 #?(:clj
    (defn -main [& args]
      (println "App running, look up and enjoy.")
-     (quil/sketch :host (:host sketch-opts) :size (:size sketch-opts) :setup (:setup sketch-opts) :update (:update sketch-opts) :no-start (:no-start sketch-opts) :draw (:draw sketch-opts) :title (:title sketch-opts) :middleware (:middleware sketch-opts)) )) 
+     (quil/sketch :features [:exit-on-close] :host (:host sketch-opts) :size (:size sketch-opts) :setup (:setup sketch-opts) :update (:update sketch-opts) :no-start (:no-start sketch-opts) :draw (:draw sketch-opts) :title (:title sketch-opts) :middleware (:middleware sketch-opts)) )) 
