@@ -18,16 +18,26 @@
 (defn- load-images []
   (zipmap image-keys (map load-one-image image-keys)))
 
+(defn select-random-state
+  "Selects a state to do things at perceived random times.  However, it's being called
+100/second and has to be consistent during the animation.   We use the clock on a 21 second 
+timer doing things every now and then. Another option would be to use a seeded PSEUDO-random 
+number generator, but to do that rquires dropping into Java or JS and not really worth the
+effort."
+  []
+  (let [timer-cycle 21
+        n (mod (int (/ (quil/millis) 1000)) timer-cycle)]
+    (cond
+      (= 10 n) :blink
+      (= 19 n) :tap
+      :else :stand)))
+
 (defn get-animation-state [keystroke]
   (cond (= :right keystroke) :move
         (= :left  keystroke) :move
         (= :up    keystroke) :move
         (= :down  keystroke) :move
-        :else                (let [n (mod (int (/ (quil/millis) 1000)) 20)]
-                               (cond
-                                 (= 10 n) :blink
-                                 (= 19 n) :tap
-                                 :else :stand))))
+        :else                (select-random-state)))
 
 (defn- animated-keyword [base-name n speed]
   (let [s (* speed (/ (quil/millis) 1000.0))
