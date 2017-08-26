@@ -139,4 +139,6 @@
 #?(:clj
    (defn -main [& args]
      (println "App running, look up and enjoy.")
-     (quil/sketch :features [:exit-on-close] :host (:host sketch-opts) :size (:size sketch-opts) :setup (:setup sketch-opts) :update (:update sketch-opts) :no-start (:no-start sketch-opts) :draw (:draw sketch-opts) :title (:title sketch-opts) :middleware (:middleware sketch-opts)) )) 
+     (quil/sketch
+      :features [:exit-on-close]
+      :host (:host sketch-opts) :size (:size sketch-opts) :setup (:setup sketch-opts) :update (:update sketch-opts) :no-start (:no-start sketch-opts) :draw (:draw sketch-opts) :title (:title sketch-opts) :middleware (:middleware sketch-opts) ) ))

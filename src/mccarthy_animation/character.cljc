@@ -6,7 +6,7 @@
 (spec/def ::y        int?) ; check overflows elsewhere
 (spec/def ::position (spec/keys :req [::x ::y]))
 
-(defonce image-keys   [:stand1 :move1 :move2])
+(defonce image-keys   [:stand1 :blink1 :blink2 :tap1 :tap2 :move1 :move2])
 
 ;; {:stand 1 :move 4}
 (defonce image-counts (frequencies (map #(keyword (apply str (take (- (count (name %)) 1) (name %)))) image-keys)))
@@ -23,7 +23,11 @@
         (= :left  keystroke) :move
         (= :up    keystroke) :move
         (= :down  keystroke) :move
-        :else                :stand))
+        :else                (let [n (mod (int (/ (quil/millis) 1000)) 20)]
+                               (cond
+                                 (= 10 n) :blink
+                                 (= 19 n) :tap
+                                 :else :stand))))
 
 (defn- animated-keyword [base-name n speed]
   (let [s (* speed (/ (quil/millis) 1000.0))
