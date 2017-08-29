@@ -18,7 +18,7 @@
 (defn- load-images []
   (zipmap image-keys (map load-one-image image-keys)))
 
-(defn select-random-state
+(defn select-state-randomly
   "Selects a state to do things at perceived random times.  However, it's being called
 100/second and has to be consistent during the animation.   We use the clock on a 21 second 
 timer doing things every now and then. Another option would be to use a seeded PSEUDO-random 
@@ -37,7 +37,7 @@ effort."
         (= :left  keystroke) :move
         (= :up    keystroke) :move
         (= :down  keystroke) :move
-        :else                (select-random-state)))
+        :else                (select-state-randomly)))
 
 (defn- animated-keyword [base-name n speed]
   (let [s (* speed (/ (quil/millis) 1000.0))

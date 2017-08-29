@@ -6,6 +6,7 @@
   :dependencies [[org.clojure/clojure "1.9.0-alpha17"]
                  [org.clojure/clojurescript "1.9.562"]
                  [quil "2.6.0"]
+                 [org.clojure/tools.nrepl "0.2.12"] ; debug
                  ]
 
   :plugins [[lein-cljsbuild "1.1.5"]]

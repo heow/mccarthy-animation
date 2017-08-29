@@ -1,13 +1,15 @@
 (ns mccarthy-animation.core
   #?(:clj (:gen-class))
-  (:require [quil.core                    :as quil :include-macros true]
-            [quil.middleware              :as quilm]
-            [mccarthy-animation.character :as char]
-            [mccarthy-animation.ball      :as ball]
-            [mccarthy-animation.lispm     :as lispm]
-            [original-lisp.core           :as lisp]))
-
-(defonce screen-size {:x 320 :y 320})
+  #?(:clj (:use [clojure.pprint]))
+  (:require [quil.core                          :as quil :include-macros true]
+            [quil.middleware                    :as quilm]
+            [mccarthy-animation.character       :as char]
+            [mccarthy-animation.ball            :as ball]
+            [mccarthy-animation.lispm           :as lispm]
+            [original-lisp.core                 :as lisp]
+            [mccarthy-animation.speech-bubble   :as bubble]
+            [mccarthy-animation.config          :as config])
+  #?(:clj (:require [clojure.tools.nrepl.server :as nrepl])))
 
 (defn say [list-of-symbols]
   (apply str (interpose " " list-of-symbols)))
@@ -20,9 +22,13 @@
   (quil/color-mode :hsb) ; Set color mode to HSB (HSV) instead of default RGB.
   
   ;; text options: sans-serif serif monopace fantasy cursive 
-  ;;(quil/text-font (quil/create-font "sans-serif" 64 true))
-  ;(quil/text-font (quil/create-font "resources/PressStart2P-Regular.ttf" 18))
-  (quil/text-font (quil/create-font "resources/VT323-Regular.ttf" 18))
+  (quil/text-font (quil/create-font "sans-serif" 18 true))
+  ;;(quil/text-font (quil/create-font "resources/PressStart2P-Regular.ttf" 18))
+  ;;(quil/text-font (quil/create-font "resources/VT323-Regular.ttf" 18))
+
+  (comment let [font (quil/create-font "resources/PressStart2P-Regular.ttf" 18)]
+    #?(:clj  (pprint (.getName font)))
+    #?(:cljs (js/console.log font)) )
 
   ;; setup function returns initial state. It contains
   ;; circle color and position.
@@ -30,7 +36,7 @@
    :angle 0
    :bg (quil/load-image "resources/background.png")
    :hero (char/create "fooman" 120 120)
-   :balls (repeatedly (+ 2 (rand-int 5)) #(ball/create "ball" (:x screen-size) (:y screen-size)))
+   :balls (repeatedly (+ 2 (rand-int 5)) #(ball/create "ball" (:x config/screen-size) (:y config/screen-size)))
    :lisp-result ""
    :lisp-time 0 })
 
@@ -51,7 +57,7 @@
 (defn update-state [state]
   (let [now           (now)
         keystroke     (get-keystroke-or-mouse)
-        hero-location (char/move screen-size (get-in state [:hero :size]) (get-in state [:hero :position])
+        hero-location (char/move config/screen-size (get-in state [:hero :size]) (get-in state [:hero :position])
                                  (cond (= :right keystroke) 2 (= :e  keystroke)  2 (= :d keystroke) 2 (= :left keystroke) -2 (= :a keystroke) -2 :else 0)
                                  (cond (= :down  keystroke) 2 (= :up keystroke) -2 :else 0) )]
 
@@ -84,6 +90,10 @@
   ;; clear the sketch by filling it with light-grey
   (quil/background 240)
   (quil/image (:bg state) 0 0)
+
+  ;; set default drawing colors
+  (quil/stroke config/default-stroke-color) 
+  (quil/fill   config/default-fill-color)
   
   ;;(js/console.log (str "hero: " (:position (:hero state))))
 
@@ -95,7 +105,10 @@
   (quil/text-size 28)
   (quil/text-align :right)
   (quil/text (str (quil/month) "/" (quil/day)) 300 45)
+  (quil/text-align :left)
 
+  (bubble/draw (:hero state) "")
+  
   ;; draw hero
   (quil/image (char/get-image (:hero state))
            (get-in state [:hero :position :x])
@@ -119,7 +132,7 @@
 ;; ensure additions are reflected in sketch calls
 (defonce sketch-opts
   {:host "mccarthy-animation"
-   :size [(:x screen-size) (:y screen-size)]
+   :size [(:x config/screen-size) (:y config/screen-size)]
    :setup setup ; setup function called only once, during sketch initialization.
    :update update-state ; update-state is called on each iteration before draw-state.
    :no-start true ; disable autostart
@@ -139,6 +152,10 @@
 #?(:clj
    (defn -main [& args]
      (println "App running, look up and enjoy.")
+     (if (or (= "debug" (first args)) (= "-debug" (first args)) (= "-d" (first args)))
+       (do
+         (println "starting nrepl on port 4006, kindly jack in")
+         (future (nrepl/start-server :port 4006)))) 
      (quil/sketch
       :features [:exit-on-close]
       :host (:host sketch-opts) :size (:size sketch-opts) :setup (:setup sketch-opts) :update (:update sketch-opts) :no-start (:no-start sketch-opts) :draw (:draw sketch-opts) :title (:title sketch-opts) :middleware (:middleware sketch-opts) ) ))
