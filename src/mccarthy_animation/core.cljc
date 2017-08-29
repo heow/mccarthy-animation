@@ -18,17 +18,10 @@
   (str "moving up " distance " ..."))
 
 (defn setup []
-  (quil/frame-rate 30)   ; Set frame rate to 30 frames per second.
+  (quil/frame-rate config/frame-rate)
   (quil/color-mode :hsb) ; Set color mode to HSB (HSV) instead of default RGB.
   
-  ;; text options: sans-serif serif monopace fantasy cursive 
-  (quil/text-font (quil/create-font "sans-serif" 18 true))
-  ;;(quil/text-font (quil/create-font "resources/PressStart2P-Regular.ttf" 18))
-  ;;(quil/text-font (quil/create-font "resources/VT323-Regular.ttf" 18))
-
-  (comment let [font (quil/create-font "resources/PressStart2P-Regular.ttf" 18)]
-    #?(:clj  (pprint (.getName font)))
-    #?(:cljs (js/console.log font)) )
+  (quil/text-font (quil/create-font config/font config/default-font-size true))
 
   ;; setup function returns initial state. It contains
   ;; circle color and position.
@@ -42,14 +35,14 @@
 
 (defn now [] (quil/millis))
 
-(defn get-keystroke-or-mouse []
+(defn- get-keystroke-or-mouse []
   (cond (quil/key-pressed?) (quil/key-as-keyword)
         (quil/mouse-pressed?) :mouse-click
         :else :none))
 
 ;; Hack to determine when we want to evaluate some lisp, checks to see what we are
 ;; and what we're NOT doing.
-(defn eval-lisp? [state now keystroke]
+(defn- eval-lisp? [state now keystroke]
   (let [time-at-last-eval (:lisp-time state)]
     (and (< 1000 (- now time-at-last-eval)) ; wait at least a second
          (contains? {:right 1 :e 1 :d 1 :left 1 :a 1 :up 1 :down 1 :mouse-click 1}  keystroke))))
@@ -88,7 +81,7 @@
 (defn draw-state [state]  
 
   ;; clear the sketch by filling it with light-grey
-  (quil/background 240)
+  (quil/background config/background-color)
   (quil/image (:bg state) 0 0)
 
   ;; set default drawing colors
@@ -138,9 +131,6 @@
    :no-start true ; disable autostart
    :draw draw-state
    :title "McCarthy Animation"
-   ;; This sketch uses functional-mode middleware.
-   ;; Check quil wiki for more info about middlewares and particularly
-   ;; functional mode fun-mode.
    :middleware [quilm/fun-mode]})
 
 ;; cljs start
