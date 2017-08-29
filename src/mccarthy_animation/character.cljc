@@ -32,6 +32,14 @@ effort."
       (= 19 n) :tap
       :else :stand)))
 
+(defn select-speech-randomly []
+  (let [timer-cycle 61
+        n (mod (int (/ (quil/millis) 2000)) timer-cycle)]
+    (cond
+      (= 1 n)  "let's go!"
+      (= 19 n) "how are you?"
+      :else "")))
+
 (defn get-animation-state [keystroke]
   (cond (= :right keystroke) :move
         (= :left  keystroke) :move

@@ -106,8 +106,6 @@
   (quil/text-align :right)
   (quil/text (str (quil/month) "/" (quil/day)) 300 45)
   (quil/text-align :left)
-
-  (bubble/draw (:hero state) "")
   
   ;; draw hero
   (quil/image (char/get-image (:hero state))
@@ -116,6 +114,8 @@
            (get-in state [:hero :size :x])
            (get-in state [:hero :size :y]) )
 
+  (bubble/draw (:hero state) (char/select-speech-randomly))
+  
   ;; draw all balls
   (let [ball-size-x 16 ball-size-y 16]
     (dorun ;; drawing is I/O and is side-effect, force it to run
