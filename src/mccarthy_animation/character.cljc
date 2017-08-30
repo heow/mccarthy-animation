@@ -7,14 +7,14 @@
 (spec/def ::y        int?) ; check overflows elsewhere
 (spec/def ::position (spec/keys :req [::x ::y]))
 
-(defonce image-keys   [:stand1 :blink1 :tap1 :move1 :move2])
+(defonce image-keys   [:stand1 :blink1 :tap1 :moveL1 :moveL2 :moveR1 :moveR2])
 
 ;; {:stand 1 :move 4}
 (defonce image-counts (frequencies (map #(keyword (apply str (take (- (count (name %)) 1) (name %)))) image-keys)))
 
 (defn- load-one-image [image]
   (let [path (str "resources/" (name image) ".png")]
-    (quil/request-image path)))
+    (quil/request-image path) ))
 
 (defn- load-images []
   (zipmap image-keys (map load-one-image image-keys)))
@@ -48,10 +48,10 @@ effort."
       :else "")))
 
 (defn get-animation-state [keystroke]
-  (cond (= :right keystroke) :move
-        (= :left  keystroke) :move
-        (= :up    keystroke) :move
-        (= :down  keystroke) :move
+  (cond (= :right keystroke) :moveR
+        (= :left  keystroke) :moveL
+        (= :up    keystroke) :moveR
+        (= :down  keystroke) :moveL
         :else                (select-state-randomly)))
 
 (defn- animated-keyword [base-name n speed]

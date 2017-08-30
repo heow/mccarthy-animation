@@ -102,12 +102,12 @@
   
   ;; draw hero
   (quil/image (char/get-image (:hero state))
-           (get-in state [:hero :position :x])
-           (get-in state [:hero :position :y])
-           (get-in state [:hero :size :x])
-           (get-in state [:hero :size :y])
-           )
+              (get-in state [:hero :position :x])
+              (get-in state [:hero :position :y])
+              (get-in state [:hero :size :x])
+              (get-in state [:hero :size :y]) )
 
+  ;; optional speach bubble
   (bubble/draw (:hero state) (char/select-speech-randomly))
   
   ;; draw magic lambda balls
