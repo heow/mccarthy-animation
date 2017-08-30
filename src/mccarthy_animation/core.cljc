@@ -28,7 +28,7 @@
   {:color 0
    :angle 0
    :bg (quil/load-image "resources/background.png")
-   :hero (char/create "fooman" 120 120)
+   :hero (char/create "fooman" config/hero-init-x config/hero-init-y)
    :balls (repeatedly (+ 2 (rand-int 5)) #(ball/create "ball" (:x config/screen-size) (:y config/screen-size)))
    :lisp-result ""
    :lisp-time 0 })
@@ -105,21 +105,19 @@
            (get-in state [:hero :position :x])
            (get-in state [:hero :position :y])
            (get-in state [:hero :size :x])
-           (get-in state [:hero :size :y]) )
+           (get-in state [:hero :size :y])
+           )
 
   (bubble/draw (:hero state) (char/select-speech-randomly))
   
-  ;; draw all balls
-  (let [ball-size-x 16 ball-size-y 16]
-    (dorun ;; drawing is I/O and is side-effect, force it to run
-      (map #(quil/ellipse (get-in % [:position :x])
-                          (get-in % [:position :y]) ball-size-x ball-size-y)
-           (:balls state))))
+  ;; draw magic lambda balls
+  (quil/text-size 12)
+  (dorun ;; drawing is I/O and is side-effect, force it to run
+   (map #(quil/text "λ" (get-in % [:position :x]) (get-in % [:position :y]))
+        (:balls state)))
    
-  ;; draw the text?
-  ;(quil/text (:balls state) 10 300)
-  ;(quil/text (str (:lisp-op state) (if (empty? (:lisp-op state)) nil " => ") (:lisp-result state)) 10 300)
-  ;(quil/text (str "anim: " (get-in state [:hero :animation]) " count" ((get-in state [:hero :animation]) char/image-counts)) 10 300)
+  ;; debugging text
+  ;(quil/text (:position (:hero state)) 10 300)
   )
 
 ;; ensure additions are reflected in sketch calls

@@ -1,6 +1,7 @@
 (ns mccarthy-animation.character
   (:require [clojure.spec.alpha :as spec]
-            [quil.core :as quil :include-macros true]))
+            [quil.core :as quil :include-macros true]
+            [mccarthy-animation.config :as config]))
 
 (spec/def ::x        int?) ; check overflows elsewhere
 (spec/def ::y        int?) ; check overflows elsewhere
@@ -28,16 +29,22 @@ effort."
   (let [timer-cycle 21
         n (mod (int (/ (quil/millis) 1000)) timer-cycle)]
     (cond
-      (= 01 n) :tap
-      (= 19 n) :blink
+      (= 01 n) :blink
+      (= 10 n) :tap
       :else :stand)))
 
 (defn select-speech-randomly []
-  (let [timer-cycle 61
-        n (mod (int (/ (quil/millis) 2000)) timer-cycle)]
-    (cond
-      (= 1 n)  "let's go!"
-      (= 19 n) "how are you?"
+  (let [timer-cycle 701
+        n (mod (int (/ (quil/millis) 3000)) timer-cycle)]
+    (cond ;; TODO move these into the config
+      (= 10 n) "hello"
+      (= 100 n) "Everyone needs computer programming. It will be the way we speak to the servants."
+      (= 200 n) "During the first three millenia, the Earthmen complained a lot."
+      (= 300 n) "He who refuses to do arithmetic is doomed to talk nonsense."
+      (= 400 n) "Mankind will probably survive even if it doesn't take my advice."
+      (= 500 n) "Cynicism is a cheap substitute for sophistication. You don't actually have to learn anything."
+      (= 600 n) "If you want to do good, work on the technology, not on getting power."
+      (= 700 n) "Self-righteousness is more dangerous than smoking."
       :else "")))
 
 (defn get-animation-state [keystroke]
@@ -65,7 +72,7 @@ effort."
       :size {:x size-x :y size-y}
       })
   ([name initial-x initial-y]
-   (create name (load-images) initial-x initial-y 64 64)))
+   (create name (load-images) initial-x initial-y config/hero-size-x config/hero-size-y)))
 
 (defn move-to? [screen-size sprite-size new-position]
   {:pre [(spec/valid? ::position new-position)]} ; throw on bogus input

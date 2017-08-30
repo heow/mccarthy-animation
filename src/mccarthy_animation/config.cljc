@@ -13,3 +13,8 @@
 
 (defonce default-stroke-color 0)
 (defonce default-fill-color   255)
+
+(defonce hero-init-x 140)
+(defonce hero-init-y 250)
+(defonce hero-size-x 64) ; don't change these yet
+(defonce hero-size-y 64) ; don't change these yet
