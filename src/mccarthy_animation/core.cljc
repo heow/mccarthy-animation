@@ -19,7 +19,7 @@
 
 (defn setup []
   (quil/frame-rate config/frame-rate)
-  (quil/color-mode :hsb) ; Set color mode to HSB (HSV) instead of default RGB.
+  (quil/color-mode :rgb) 
   
   (quil/text-font (quil/create-font config/font config/default-font-size true))
 
@@ -112,6 +112,7 @@
   
   ;; draw magic lambda balls
   (quil/text-size 12)
+  (quil/fill 255 255 0) ; yellow
   (dorun ;; drawing is I/O and is side-effect, force it to run
    (map #(quil/text "λ" (get-in % [:position :x]) (get-in % [:position :y]))
         (:balls state)))

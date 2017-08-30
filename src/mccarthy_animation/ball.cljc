@@ -11,16 +11,15 @@
 
 (defn calculate-orbit-target [angle hero ball]
   (let [angle (+ angle (:orbit-angle-offset ball))
-        target-x (+ (* 50 (quil/cos angle)) ; elipse
-                    (:x (:position hero))     ; hero x
-                    (/ (:x (:size hero)) 2))    ; 50% of hero y
+        target-x (+ (* 50 (quil/cos angle))  ; elipse
+                    (:x (:position hero))    ; hero x
+                    (/ (:x (:size hero)) 2)) ; 50% of hero y
         target-y (+ (* 20 (quil/sin angle))
                     (:y (:position hero)))]
     {:x target-x :y target-y } ))
 
 (defn aim-at [me-pos target-pos]
-  (let [;; just make things more readable
-        me-x (:x me-pos)
+  (let [me-x (:x me-pos) ;; more readable
         me-y (:y me-pos)
         tg-x (:x target-pos)
         tg-y (:y target-pos)
@@ -30,5 +29,4 @@
         new-x (if (> tg-x me-x) (+ me-x (* travel-speed (quil/cos target-angle))) (- me-x (* travel-speed (quil/cos target-angle))))
         new-y (if (> tg-y me-y) (+ me-y (* travel-speed (quil/sin target-angle))) (- me-y (* travel-speed (quil/sin target-angle))))
         ]
-    ;;[ new-x new-y ]
     {:x new-x :y new-y}))
