@@ -30,7 +30,7 @@
                 :position {:x (* -1 config/screen-width) :y 0}}
    :hero (char/create "fooman" (:x config/hero-init-position) (:y config/hero-init-position) )
    :magic-lambdas (repeatedly (+ 2 (rand-int 5)) #(ball/create "ball" (:x config/screen-size) (:y config/screen-size)))
-   :term  {:image (quil/load-image "resources/terminal.png") :position {:x -200 :y 250}}
+   :term  {:image (quil/load-image "resources/terminal.png") :position {:x -200 :y 250} :size {:x 48 :y 48}}
    :lisp-result ""
    :lisp-time 0 })
 
@@ -138,7 +138,7 @@
     (quil/text-size 4) 
     (quil/text (speech/wrap-line 20 (char/select-speech-randomly)) 10 15)
     ;; third layer is image, with "hole" for screen
-    (quil/image (:image (:term state)) 0 0 48 48) )
+    (quil/image (:image (:term state)) 0 0 (:x (:size (:term state))) (:y (:size (:term state)))) )
     
   ;; draw hero
   (let [hero (:hero state)]
@@ -158,27 +158,16 @@
    (map #(quil/text "λ" (get-in % [:position :x]) (get-in % [:position :y]))
         (:magic-lambdas state)))
   
-  ;; uncomment to debug
+  ;; uncomment to debug"
   (comment quil/text (str "bg     " (:position (:background state))
                           "\nhero " (:position (:hero state))
                           "\nlmb0 " (int (:x (:position (first (:magic-lambdas state)))))) 10 280)
   )
 
-;; ensure additions are reflected in sketch calls
-(defonce sketch-opts
-  {:host "mccarthy-animation"
-   :size [(:x config/screen-size) (:y config/screen-size)]
-   :setup setup ; setup function called only once, during sketch initialization.
-   :update update-state ; update-state is called on each iteration before draw-state.
-   :no-start true ; disable autostart
-   :draw draw-state
-   :title "McCarthy Animation"
-   :middleware [quilm/fun-mode]})
-
 ;; cljs start
 ;; TODO think about how to fix this without macros or a real eval
 #?(:cljs
-   (quil/defsketch mccarthy-animation :host (:host sketch-opts) :size (:size sketch-opts) :setup (:setup sketch-opts) :update (:update sketch-opts) :no-start (:no-start sketch-opts) :draw (:draw sketch-opts) :title (:title sketch-opts) :middleware (:middleware sketch-opts) ))
+   (quil/defsketch mccarthy-animation :host (:host config/sketch-opts) :size (:size config/sketch-opts) :setup setup :update update-state :no-start (:no-start config/sketch-opts) :draw draw-state :title (:title config/sketch-opts) :middleware [quilm/fun-mode] ))
 
 ;; clj application start
 #?(:clj
@@ -190,4 +179,4 @@
          (future (nrepl/start-server :port 4006)))) 
      (quil/sketch
       :features [:exit-on-close]
-      :host (:host sketch-opts) :size (:size sketch-opts) :setup (:setup sketch-opts) :update (:update sketch-opts) :no-start (:no-start sketch-opts) :draw (:draw sketch-opts) :title (:title sketch-opts) :middleware (:middleware sketch-opts) ) ))
+      :host (:host config/sketch-opts) :size (:size config/sketch-opts) :setup setup :update update-state :no-start (:no-start config/sketch-opts) :draw draw-state :title (:title config/sketch-opts) :middleware [quilm/fun-mode] ) ))
