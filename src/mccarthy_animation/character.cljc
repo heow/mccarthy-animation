@@ -47,11 +47,11 @@ effort."
       (= 700 n) "Self-righteousness is more dangerous than smoking."
       :else "")))
 
-(defn get-animation-state [keystroke]
-  (cond (= :right keystroke) :moveR
-        (= :left  keystroke) :moveL
-        (= :up    keystroke) :moveR
-        (= :down  keystroke) :moveL
+(defn get-animation-state [direction]
+  (cond (= :right direction) :moveR
+        (= :left  direction) :moveL
+        (= :up    direction) :moveR
+        (= :down  direction) :moveL
         :else                (select-state-randomly)))
 
 (defn- animated-keyword [base-name n speed]
@@ -70,11 +70,12 @@ effort."
       :animation :stand
       :position {:x initial-x :y initial-y}
       :size {:x size-x :y size-y}
+      :speed 2
       })
   ([name initial-x initial-y]
-   (create name (load-images) initial-x initial-y config/hero-size-x config/hero-size-y)))
+   (create name (load-images) initial-x initial-y (:x config/hero-size) (:y config/hero-size))))
 
-(defn move-to? [screen-size sprite-size new-position]
+(defn- move-to? [screen-size sprite-size new-position]
   {:pre [(spec/valid? ::position new-position)]} ; throw on bogus input
   (cond
     (> (::x new-position) (- (:x screen-size) (:x sprite-size))) false
@@ -83,10 +84,16 @@ effort."
     (< (::y new-position) 0) false
     :else true))
 
-(defn move [screen-size sprite-size position x-delta y-delta]
-  (let [proposed-x (+ (:x position) x-delta)
-        proposed-y (+ (:y position) y-delta)]
+(defn ensure-position [hero direction]
+  (let [x-delta (cond (= :right direction) (:speed hero)
+                      (= :left  direction) (* -1 (:speed hero))
+                      :else 0)
+        y-delta (cond (= :down direction) (:speed hero)
+                      (= :up   direction) (* -1 (:speed hero))
+                      :else 0)
+        proposed-x (+ (:x (:position hero)) x-delta)
+        proposed-y (+ (:y (:position hero)) y-delta)]
     ;; keep him on-screen
-    (if (move-to? screen-size sprite-size {::x proposed-x ::y proposed-y})
-      {:position {:x proposed-x :y proposed-y }}
-      {:position position}) ))
+    (if (move-to? config/screen-size (:size hero) {::x proposed-x ::y proposed-y})
+      {:x proposed-x :y proposed-y}
+      (:position hero)) ))

@@ -7,7 +7,7 @@
             [mccarthy-animation.ball            :as ball]
             [mccarthy-animation.lispm           :as lispm]
             [original-lisp.core                 :as lisp]
-            [mccarthy-animation.speech-bubble   :as bubble]
+            [mccarthy-animation.speech-bubble   :as speech]
             [mccarthy-animation.config          :as config])
   #?(:clj (:require [clojure.tools.nrepl.server :as nrepl])))
 
@@ -25,11 +25,11 @@
 
   ;; setup function returns initial state. It contains
   ;; circle color and position.
-  {:color 0
-   :angle 0
-   :bg (quil/load-image "resources/background.png")
-   :hero (char/create "fooman" config/hero-init-x config/hero-init-y)
-   :balls (repeatedly (+ 2 (rand-int 5)) #(ball/create "ball" (:x config/screen-size) (:y config/screen-size)))
+  {:angle 0
+   :background {:image (quil/load-image "resources/background.png")
+                :position {:x (* -1 config/screen-width) :y 0}}
+   :hero (char/create "fooman" (:x config/hero-init-position) (:y config/hero-init-position) )
+   :magic-lambdas (repeatedly (+ 2 (rand-int 5)) #(ball/create "ball" (:x config/screen-size) (:y config/screen-size)))
    :lisp-result ""
    :lisp-time 0 })
 
@@ -40,6 +40,16 @@
         (quil/mouse-pressed?) :mouse-click
         :else :none))
 
+(defn- get-direction [keystroke]
+  ;; convert gaming keys to direction
+  (cond (= keystroke :a) :left
+        (= keystroke :e) :right
+        (= keystroke :d) :right
+        (= keystroke :w) :up
+        (= keystroke :s) :down
+        :else keystroke
+        ))
+
 ;; Hack to determine when we want to evaluate some lisp, checks to see what we are
 ;; and what we're NOT doing.
 (defn- eval-lisp? [state now keystroke]
@@ -47,12 +57,29 @@
     (and (< 1000 (- now time-at-last-eval)) ; wait at least a second
          (contains? {:right 1 :e 1 :d 1 :left 1 :a 1 :up 1 :down 1 :mouse-click 1}  keystroke))))
 
+;; Ensures the background stays within the 0 to -640 (3 screens) range
+(defn- ensure-background-position [pos]
+  (let [min-x (* -1 (- config/background-max-width config/screen-width))
+        x (:x pos)]
+    {:x (cond (< x min-x) min-x
+              (> x 0)    0
+              :else x)
+     :y (:y pos)}))
+
+(defn scroll [direction background thing-position]
+  (let [pos    thing-position
+        min-x (* -1 (- config/background-max-width config/screen-width))]
+    (cond (and (>= (:x (:position background)) 0)     (= :left direction))  pos ; don't scroll if we hit the limits of the bg
+          (and (<= (:x (:position background)) min-x) (= :right direction)) pos 
+          (= :right direction) {:x (- (:x pos) config/background-scroll-speed) :y (:y pos)} ; move it
+          (= :left  direction) {:x (+ (:x pos) config/background-scroll-speed) :y (:y pos)}
+          :else pos)))
+
 (defn update-state [state]
-  (let [now           (now)
-        keystroke     (get-keystroke-or-mouse)
-        hero-location (char/move config/screen-size (get-in state [:hero :size]) (get-in state [:hero :position])
-                                 (cond (= :right keystroke) 2 (= :e  keystroke)  2 (= :d keystroke) 2 (= :left keystroke) -2 (= :a keystroke) -2 :else 0)
-                                 (cond (= :down  keystroke) 2 (= :up keystroke) -2 :else 0) )]
+  (let [now       (now)
+        keystroke (get-keystroke-or-mouse)
+        direction (get-direction keystroke)
+        hero-pos  (char/ensure-position (:hero state) direction)]
 
     ;; aim toward hero orbit (with offset for each one)
     (let [angle (:angle state)]
@@ -64,25 +91,21 @@
             new-lisp-time   (if (eval-lisp? state now keystroke) now (:lisp-time state))]
         
         ;; this is the new state
-        {:color      (mod (+ (:color state) 0.7) 255)
-         :angle      (+ (:angle state) ball/angle-speed)
-         :bg         (:bg state)
+        {:angle      (+ (:angle state) ball/angle-speed)
+         :background (assoc (:background state) :position (ensure-background-position (scroll direction (:background state) (:position (:background state)))))
          :hero       (-> (:hero state)
-                         (assoc ,,, :position (:position hero-location))
-                         (assoc ,,, :animation (char/get-animation-state keystroke)) )
-         :balls (map #(assoc % :position (ball/aim-at (:position %) (ball/calculate-orbit-target angle (:hero state) %)))
-                     (:balls state))
-
+                         (assoc ,,, :position hero-pos)
+                         (assoc ,,, :animation (char/get-animation-state direction)) )
+         :magic-lambdas (map #(assoc % :position (scroll direction (:background state) (ball/aim-at (:position %) (ball/calculate-orbit-target angle (:hero state) %))))
+                             (:magic-lambdas state))
          :lisp-op     rnd-lisp-op
          :lisp-result new-lisp-result
          :lisp-time   new-lisp-time
          }) )))
 
 (defn draw-state [state]  
-
-  ;; clear the sketch by filling it with light-grey
   (quil/background config/background-color)
-  (quil/image (:bg state) 0 0)
+  (quil/image (:image (:background state)) (:x (:position (:background state))) 0)
 
   ;; set default drawing colors
   (quil/stroke config/default-stroke-color) 
@@ -91,35 +114,38 @@
   ;;(js/console.log (str "hero: " (:position (:hero state))))
 
   ;; left aligned, hard-code the sizes in pixels, it's the only way to fly in 1983
+  ;; make it vaguely utilitarian by drawing the time
   (quil/text-size 48)
   (quil/text-align :left)
   (quil/text (str (quil/hour) ":" (let [m (str (quil/minute))] (if (= 1 (count m)) (str "0" m) m))) 25 60)
-
+  
   (quil/text-size 28)
   (quil/text-align :right)
   (quil/text (str (quil/month) "/" (quil/day)) 300 45)
   (quil/text-align :left)
-  
-  ;; draw hero
-  (quil/image (char/get-image (:hero state))
-              (get-in state [:hero :position :x])
-              (get-in state [:hero :position :y])
-              (get-in state [:hero :size :x])
-              (get-in state [:hero :size :y]) )
 
-  ;; optional speach bubble
-  (bubble/draw (:hero state) (char/select-speech-randomly))
+  ;; draw hero
+  (let [hero (:hero state)]
+    (quil/image (char/get-image hero)
+                (get-in hero [:position :x])
+                (get-in hero [:position :y])
+                (get-in hero [:size :x])
+                (get-in hero [:size :y]) )
+
+    ;; optional speach bubble
+    (speech/draw hero (char/select-speech-randomly)) )
   
   ;; draw magic lambda balls
   (quil/text-size 12)
   (quil/fill 255 255 0) ; yellow
-  (dorun ;; drawing is I/O and is side-effect, force it to run
+  (dorun ;; drawing is I/O and is a side-effect, force it to run
    (map #(quil/text "λ" (get-in % [:position :x]) (get-in % [:position :y]))
-        (:balls state)))
-   
-  ;; debugging text
-  ;(quil/text (:position (:hero state)) 10 300)
-  )
+        (:magic-lambdas state)))
+  
+  ;; uncomment to debug
+  (comment quil/text (str "bg     " (:position (:background state))
+                          "\nhero " (:position (:hero state))
+                          "\nlmb0 " (int (:x (:position (first (:magic-lambdas state)))))) 10 280) )
 
 ;; ensure additions are reflected in sketch calls
 (defonce sketch-opts
