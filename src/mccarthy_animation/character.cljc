@@ -37,7 +37,7 @@ effort."
   (let [timer-cycle 701
         n (mod (int (/ (quil/millis) 3000)) timer-cycle)]
     (cond ;; TODO move these into the config http://www-formal.stanford.edu/jmc/sayings.html
-      (= 10 n) "hello"
+      (= 5 n) "hello"
       (= 100 n) "Everyone needs computer programming. It will be the way we speak to the servants."
       (= 200 n) "During the first three millenia, the Earthmen complained a lot."
       (= 300 n) "He who refuses to do arithmetic is doomed to talk nonsense."
