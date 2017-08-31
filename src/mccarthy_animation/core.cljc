@@ -30,6 +30,7 @@
                 :position {:x (* -1 config/screen-width) :y 0}}
    :hero (char/create "fooman" (:x config/hero-init-position) (:y config/hero-init-position) )
    :magic-lambdas (repeatedly (+ 2 (rand-int 5)) #(ball/create "ball" (:x config/screen-size) (:y config/screen-size)))
+   :term  {:image (quil/load-image "resources/terminal.png") :position {:x -200 :y 250}}
    :lisp-result ""
    :lisp-time 0 })
 
@@ -98,12 +99,15 @@
                          (assoc ,,, :animation (char/get-animation-state direction)) )
          :magic-lambdas (map #(assoc % :position (scroll direction (:background state) (ball/aim-at (:position %) (ball/calculate-orbit-target angle (:hero state) %))))
                              (:magic-lambdas state))
+         :term        (-> (:term state)
+                          (assoc ,,, :position (scroll direction (:background state) (:position (:term state)))))
          :lisp-op     rnd-lisp-op
          :lisp-result new-lisp-result
          :lisp-time   new-lisp-time
          }) )))
 
-(defn draw-state [state]  
+(defn draw-state [state]
+  ;; background
   (quil/background config/background-color)
   (quil/image (:image (:background state)) (:x (:position (:background state))) 0)
 
@@ -124,6 +128,18 @@
   (quil/text (str (quil/month) "/" (quil/day)) 300 45)
   (quil/text-align :left)
 
+  ;; terminal
+  (quil/with-translation [(:x (:position (:term state))) (:y (:position (:term state)))]
+    (quil/fill config/black)
+    ;; first layer screen background
+    (quil/rect 10 5 20 20) 
+    (quil/fill config/white)
+    ;; second layer text
+    (quil/text-size 4) 
+    (quil/text (speech/wrap-line 20 (char/select-speech-randomly)) 10 15)
+    ;; third layer is image, with "hole" for screen
+    (quil/image (:image (:term state)) 0 0 48 48) )
+    
   ;; draw hero
   (let [hero (:hero state)]
     (quil/image (char/get-image hero)
@@ -145,7 +161,8 @@
   ;; uncomment to debug
   (comment quil/text (str "bg     " (:position (:background state))
                           "\nhero " (:position (:hero state))
-                          "\nlmb0 " (int (:x (:position (first (:magic-lambdas state)))))) 10 280) )
+                          "\nlmb0 " (int (:x (:position (first (:magic-lambdas state)))))) 10 280)
+  )
 
 ;; ensure additions are reflected in sketch calls
 (defonce sketch-opts

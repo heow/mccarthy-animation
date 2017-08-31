@@ -18,15 +18,15 @@
              (conj lines (apply str line))))))
 
 ;; for readability
-(defn- wrap-line [size text]
+(defn wrap-line [size text]
   (apply str (drop-last ;; remove final LF
               (apply str (map #(str % "\n") (wrap-line-work size text))))))
 
 (defn draw [hero raw-text]
   (if (not (empty? raw-text))
     (do
-      (quil/stroke 255)
-      (quil/fill   255)
+      (quil/stroke config/white)
+      (quil/fill   config/white)
       (quil/text-size 12)
       (quil/text-align :left)
 
@@ -48,14 +48,14 @@
           (quil/rect box-x box-y box-width box-height)
 
           ;; outline box on 3 sides
-          (quil/stroke 0)
+          (quil/stroke config/black)
           (quil/stroke-weight stroke-weight)
           (quil/line box-x box-y (- (+ box-x box-width) stroke-weight) box-y)
           (quil/line (+ box-x box-width) box-y (+ box-x box-width) (- (+ box-y box-height) 1))
           (quil/line box-x box-y box-x (- (+ box-y box-height) 1))
 
           ;; triangle
-          (quil/stroke 255)
+          (quil/stroke config/white)
           (let [tri-0-x (+ hero-x 40) 
                 tri-0-y (- hero-y 0)
                 tri-1-x (min (+ (+ 5 text-width) box-x) ; normal
@@ -69,7 +69,7 @@
                            tri-2-x tri-y)
 
             ;; outline triangle
-            (quil/stroke 1)
+            (quil/stroke config/black)
             (quil/line tri-0-x tri-0-y tri-1-x (+ tri-y 1))
             (quil/line tri-0-x tri-0-y tri-2-x (+ tri-y 1))
 
@@ -78,7 +78,7 @@
             (quil/line (- (+ box-x box-width) stroke-weight) (+ box-y box-height) (+ tri-1-x 1) tri-y) )
 
           ;; actual text
-          (quil/fill 0) ; blacken text
+          (quil/fill config/black) ; blacken text
           (quil/text text-to-say (+ box-x 8) (+ box-y 20)) )
 
         
