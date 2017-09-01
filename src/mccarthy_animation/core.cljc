@@ -3,12 +3,13 @@
   #?(:clj (:use [clojure.pprint]))
   (:require [quil.core                          :as quil :include-macros true]
             [quil.middleware                    :as quilm]
+            [mccarthy-animation.config          :as config]
             [mccarthy-animation.character       :as char]
             [mccarthy-animation.ball            :as ball]
             [mccarthy-animation.lispm           :as lispm]
             [original-lisp.core                 :as lisp]
             [mccarthy-animation.speech-bubble   :as speech]
-            [mccarthy-animation.config          :as config])
+            [mccarthy-animation.terminal        :as term])
   #?(:clj (:require [clojure.tools.nrepl.server :as nrepl])))
 
 (defn say [list-of-symbols]
@@ -25,16 +26,16 @@
 
   ;; setup function returns initial state. It contains
   ;; circle color and position.
-  {:angle 0
-   :background {:image (quil/load-image "resources/background.png")
-                :position {:x (* -1 config/screen-width) :y 0}}
-   :hero (char/create "fooman" (:x config/hero-init-position) (:y config/hero-init-position) )
-   :magic-lambdas (repeatedly (+ 2 (rand-int 5)) #(ball/create "ball" (:x config/screen-size) (:y config/screen-size)))
-   :term  {:image (quil/load-image "resources/terminal.png") :position {:x -200 :y 250} :size {:x 48 :y 48}}
-   :lisp-result ""
-   :lisp-time 0 })
-
-(defn now [] (quil/millis))
+  (let [hero (char/create "fooman" (:x config/hero-init-position) (:y config/hero-init-position) )
+        term (term/create -200 250 48 48)]
+    {:angle 0
+     :background    {:image (quil/load-image "resources/background.png") :position {:x (* -1 config/screen-width) :y 0}}
+     :hero          hero
+     :magic-lambdas (repeatedly (+ 2 (rand-int 5)) #(ball/create "ball" (:x config/screen-size) (:y config/screen-size)))
+     :term          term
+     :collideables  (list hero term)
+     :lisp-result ""
+     :lisp-time 0 }))
 
 (defn- get-keystroke-or-mouse []
   (cond (quil/key-pressed?) (quil/key-as-keyword)
@@ -74,37 +75,45 @@
           (and (<= (:x (:position background)) min-x) (= :right direction)) pos 
           (= :right direction) {:x (- (:x pos) config/background-scroll-speed) :y (:y pos)} ; move it
           (= :left  direction) {:x (+ (:x pos) config/background-scroll-speed) :y (:y pos)}
-          :else pos)))
+          :else pos) ))
+
+;; TODO do this for real ...maybe
+(defn collision? [collideables]
+  (let [a (first collideables)
+        b (second collideables)]
+    (and
+     (and (<=    (:y (:position a)) (+ (:y (:position b))  (:y (:size     b))))
+          (>= (+ (:y (:position a))    (:y (:size     a))) (:y (:position b))))
+     (and (<=    (:x (:position a)) (+ (:x (:position b))  (:x (:size     b))))
+          (>= (+ (:x (:position a))    (:x (:size     a))) (:x (:position b)))) )))
 
 (defn update-state [state]
-  (let [now       (now)
+  (let [;; TODO these bits will go away
+        now       (quil/millis)
         keystroke (get-keystroke-or-mouse)
-        direction (get-direction keystroke)
-        hero-pos  (char/ensure-position (:hero state) direction)]
-
-    ;; aim toward hero orbit (with offset for each one)
-    (let [angle (:angle state)]
+        rnd-lisp-op     (if (eval-lisp? state now keystroke) (rand-nth lispm/operations) (:lisp-op state))
+        new-lisp-script (if (eval-lisp? state now keystroke) (lispm/eval rnd-lisp-op) nil)
+        new-lisp-result (if (eval-lisp? state now keystroke) (if (original-lisp.core/atom? new-lisp-script) new-lisp-script (lispm/eval-clojure new-lisp-script)) (:lisp-result state))
+        new-lisp-time   (if (eval-lisp? state now keystroke) now (:lisp-time state))]
       
-      ;; TODO this will go away
-      (let [rnd-lisp-op     (if (eval-lisp? state now keystroke) (rand-nth lispm/operations) (:lisp-op state))
-            new-lisp-script (if (eval-lisp? state now keystroke) (lispm/eval rnd-lisp-op) nil)
-            new-lisp-result (if (eval-lisp? state now keystroke) (if (original-lisp.core/atom? new-lisp-script) new-lisp-script (lispm/eval-clojure new-lisp-script)) (:lisp-result state))
-            new-lisp-time   (if (eval-lisp? state now keystroke) now (:lisp-time state))]
-        
-        ;; this is the new state
-        {:angle      (+ (:angle state) ball/angle-speed)
-         :background (assoc (:background state) :position (ensure-background-position (scroll direction (:background state) (:position (:background state)))))
-         :hero       (-> (:hero state)
-                         (assoc ,,, :position hero-pos)
-                         (assoc ,,, :animation (char/get-animation-state direction)) )
-         :magic-lambdas (map #(assoc % :position (scroll direction (:background state) (ball/aim-at (:position %) (ball/calculate-orbit-target angle (:hero state) %))))
-                             (:magic-lambdas state))
-         :term        (-> (:term state)
-                          (assoc ,,, :position (scroll direction (:background state) (:position (:term state)))))
-         :lisp-op     rnd-lisp-op
-         :lisp-result new-lisp-result
-         :lisp-time   new-lisp-time
-         }) )))
+    (let [direction (get-direction keystroke)
+          hero      (-> (:hero state)
+                        (assoc ,,, :position   (char/ensure-screen-position (:hero state) direction))
+                        (assoc ,,, :halo-angle (+ (:halo-angle (:hero state)) ball/angle-speed))
+                        (assoc ,,, :animation  (char/get-animation-state direction)) )
+          term      (-> (:term state)
+                        (assoc ,,, :position (scroll direction (:background state) (:position (:term state)))))]
+      { ;; build the new state
+       :background (assoc (:background state) :position (ensure-background-position (scroll direction (:background state) (:position (:background state)))))
+       :hero       hero
+       :magic-lambdas (map #(assoc % :position (scroll direction (:background state) (ball/aim-at (:position %) (ball/calculate-orbit-target (:hero state) %))))
+                           (:magic-lambdas state))
+       :term        term
+       :collideables(list hero term)
+       :lisp-op     rnd-lisp-op
+       :lisp-result new-lisp-result
+       :lisp-time   new-lisp-time
+       })) )
 
 (defn draw-state [state]
   ;; background
@@ -129,16 +138,7 @@
   (quil/text-align :left)
 
   ;; terminal
-  (quil/with-translation [(:x (:position (:term state))) (:y (:position (:term state)))]
-    (quil/fill config/black)
-    ;; first layer screen background
-    (quil/rect 10 5 20 20) 
-    (quil/fill config/white)
-    ;; second layer text
-    (quil/text-size 4) 
-    (quil/text (speech/wrap-line 20 (char/select-speech-randomly)) 10 15)
-    ;; third layer is image, with "hole" for screen
-    (quil/image (:image (:term state)) 0 0 (:x (:size (:term state))) (:y (:size (:term state)))) )
+  (term/draw (:term state) (collision? (:collideables state)))
     
   ;; draw hero
   (let [hero (:hero state)]
@@ -159,9 +159,9 @@
         (:magic-lambdas state)))
   
   ;; uncomment to debug"
-  (comment quil/text (str "bg     " (:position (:background state))
-                          "\nhero " (:position (:hero state))
-                          "\nlmb0 " (int (:x (:position (first (:magic-lambdas state)))))) 10 280)
+  (comment quil/text (str "\n     " (:id (:hero state)) " " (:position (:hero state))
+                  "\n     " (:id (:term state)) " " (:position (:term state))
+                  "\ncol? " (collision? (:collideables state))) 10 280)
   )
 
 ;; cljs start

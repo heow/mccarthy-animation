@@ -9,8 +9,8 @@
   {:position {:x (rand-int max-x) :y (rand-int max-y)}
    :orbit-angle-offset (rand-int 360)})
 
-(defn calculate-orbit-target [angle hero ball]
-  (let [angle (+ angle (:orbit-angle-offset ball))
+(defn calculate-orbit-target [hero ball]
+  (let [angle (+ (:halo-angle hero) (:orbit-angle-offset ball))
         target-x (+ (* 50 (quil/cos angle))  ; elipse
                     (:x (:position hero))    ; hero x
                     (/ (:x (:size hero)) 2)) ; 50% of hero y

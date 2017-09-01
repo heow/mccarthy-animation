@@ -65,35 +65,41 @@ effort."
 
 (defn create
   ([name images initial-x initial-y size-x size-y]
-     {:name name
-      :images images
-      :animation :stand
-      :position {:x initial-x :y initial-y}
-      :size {:x size-x :y size-y}
-      :speed 2
-      })
+   {:id (gensym "char-")
+    :name name
+    :images images
+    :animation :stand
+    :position {:x initial-x :y initial-y}
+    :size {:x size-x :y size-y}
+    :speed 2
+    :halo-angle (rand-int 360)
+    })
   ([name initial-x initial-y]
    (create name (load-images) initial-x initial-y (:x config/hero-size) (:y config/hero-size))))
 
 (defn- move-to? [screen-size sprite-size new-position]
-  {:pre [(spec/valid? ::position new-position)]} ; throw on bogus input
+  ;;{:pre [(spec/valid? ::position new-position)]} ; throw on bogus input
   (cond
-    (> (::x new-position) (- (:x screen-size) (:x sprite-size))) false
-    (> (::y new-position) (- (:y screen-size) (:y sprite-size))) false
-    (< (::x new-position) 0) false
-    (< (::y new-position) 0) false
+    (> (:x new-position) (- (:x screen-size) (:x sprite-size))) false
+    (> (:y new-position) (- (:y screen-size) (:y sprite-size))) false
+    (< (:x new-position) 0) false
+    (< (:y new-position) 0) false
     :else true))
 
-(defn ensure-position [hero direction]
-  (let [x-delta (cond (= :right direction) (:speed hero)
-                      (= :left  direction) (* -1 (:speed hero))
+(defn proposed-position [hero direction]
+  (let [speed   (:speed hero)
+        x-delta (cond (= :right direction)       speed
+                      (= :left  direction) (* -1 speed)
                       :else 0)
-        y-delta (cond (= :down direction) (:speed hero)
-                      (= :up   direction) (* -1 (:speed hero))
-                      :else 0)
-        proposed-x (+ (:x (:position hero)) x-delta)
-        proposed-y (+ (:y (:position hero)) y-delta)]
-    ;; keep him on-screen
-    (if (move-to? config/screen-size (:size hero) {::x proposed-x ::y proposed-y})
-      {:x proposed-x :y proposed-y}
-      (:position hero)) ))
+        y-delta (cond (= :down direction)       speed
+                      (= :up   direction) (* -1 speed)
+                      :else 0)]
+    {:x (+ (:x (:position hero)) x-delta)
+     :y (+ (:y (:position hero)) y-delta)} ))
+
+(defn ensure-screen-position [hero direction]
+  ;; keep the hero on-screen
+  (let [new-pos (proposed-position hero direction)]
+    (if (move-to? config/screen-size (:size hero) new-pos)
+      new-pos
+      (:position hero))))
