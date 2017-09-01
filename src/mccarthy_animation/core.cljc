@@ -27,7 +27,7 @@
   ;; setup function returns initial state. It contains
   ;; circle color and position.
   (let [hero (char/create "fooman" (:x config/hero-init-position) (:y config/hero-init-position) )
-        term (term/create -200 250 48 48)]
+        term (term/create -200 250)]
     {:angle 0
      :background    {:image (quil/load-image "resources/background.png") :position {:x (* -1 config/screen-width) :y 0}}
      :hero          hero
@@ -68,8 +68,8 @@
               :else x)
      :y (:y pos)}))
 
-(defn scroll [direction background thing-position]
-  (let [pos    thing-position
+(defn scroll [direction background hero-position]
+  (let [pos    hero-position
         min-x (* -1 (- config/background-max-width config/screen-width))]
     (cond (and (>= (:x (:position background)) 0)     (= :left direction))  pos ; don't scroll if we hit the limits of the bg
           (and (<= (:x (:position background)) min-x) (= :right direction)) pos 
@@ -95,7 +95,7 @@
         new-lisp-script (if (eval-lisp? state now keystroke) (lispm/eval rnd-lisp-op) nil)
         new-lisp-result (if (eval-lisp? state now keystroke) (if (original-lisp.core/atom? new-lisp-script) new-lisp-script (lispm/eval-clojure new-lisp-script)) (:lisp-result state))
         new-lisp-time   (if (eval-lisp? state now keystroke) now (:lisp-time state))]
-      
+
     (let [direction (get-direction keystroke)
           hero      (-> (:hero state)
                         (assoc ,,, :position   (char/ensure-screen-position (:hero state) direction))
@@ -149,7 +149,9 @@
                 (get-in hero [:size :y]) )
 
     ;; optional speach bubble
-    (speech/draw hero (char/select-speech-randomly)) )
+    ;;    (speech/draw hero (char/select-speech-randomly))
+    (speech/draw hero "hello utao eunaoh unoehu noaehu noaethu noaehu naoehu naoehtu naoeuh neouh nh unetoah u")
+    )
   
   ;; draw magic lambda balls
   (quil/text-size 12)

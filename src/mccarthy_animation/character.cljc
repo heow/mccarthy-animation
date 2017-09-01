@@ -42,7 +42,7 @@ effort."
   (let [timer-cycle 701
         n (mod (int (/ (quil/millis) 3000)) timer-cycle)]
     (cond ;; TODO move these into the config http://www-formal.stanford.edu/jmc/sayings.html
-      (= 5 n) "hello"
+      (= 1 n) "hello"
       (= 100 n) "Everyone needs computer programming. It will be the way we speak to the servants."
       (= 200 n) "During the first three millenia, the Earthmen complained a lot."
       (= 300 n) "He who refuses to do arithmetic is doomed to talk nonsense."
@@ -69,18 +69,18 @@ effort."
     (get-in hero [:images (animated-keyword animation (animation image-counts) 2.0)])))
 
 (defn create
-  ([name images initial-x initial-y size-x size-y]
+  ([name images initial-x initial-y]
    {:id         (gensym "char-")
     :name       name
     :images     images
     :animation  :stand
     :position   {:x initial-x :y initial-y}
-    :size       {:x size-x    :y size-y}
+    :size       {:x 38 :y 50} ;; TODO: calculate this
     :speed      2
     :halo-angle (rand-int 360)
     })
   ([name initial-x initial-y]
-   (create name (load-images) initial-x initial-y (:x config/hero-size) (:y config/hero-size))))
+   (create name (load-images) initial-x initial-y)))
 
 (defn- move-to? [screen-size sprite-size new-position]
   {:pre [(spec/valid? ::position screen-size)  ; throw on bogus input

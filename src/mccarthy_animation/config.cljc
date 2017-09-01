@@ -22,7 +22,6 @@
 (defonce background-max-width (* 3 screen-width))
 
 (defonce hero-init-position {:x 140 :y 250})
-(defonce hero-size          {:x 64  :y 64}) ; don't change these yet
 
 ;; ensure any additions are reflected in sketch start for cljs and clj
 (defonce sketch-opts
