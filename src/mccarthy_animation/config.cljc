@@ -20,6 +20,7 @@
 
 (defonce background-scroll-speed 5)
 (defonce background-max-width (* 3 screen-width))
+(defonce background-scroll-point 0.15) ;; as % of screen
 
 (defonce hero-init-position {:x 140 :y 250})
 
@@ -29,3 +30,11 @@
    :size [(:x screen-size) (:y screen-size)]
    :no-start true ; disable autostart
    :title "McCarthy Animation"})
+
+(def scroll-point-right
+  (- screen-width
+     (* screen-width background-scroll-point)))
+
+(def scroll-point-left
+  (* screen-width background-scroll-point)
+  )

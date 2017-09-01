@@ -76,22 +76,25 @@ effort."
     :animation  :stand
     :position   {:x initial-x :y initial-y}
     :size       {:x 38 :y 50} ;; TODO: calculate this
-    :speed      2
+    :speed      5
     :halo-angle (rand-int 360)
     })
   ([name initial-x initial-y]
    (create name (load-images) initial-x initial-y)))
 
-(defn- move-to? [screen-size sprite-size new-position]
+(defn- move-to? [screen-size background sprite-size new-position]
   {:pre [(spec/valid? ::position screen-size)  ; throw on bogus input
          (spec/valid? ::position sprite-size)
          (spec/valid? ::position new-position)]}
-  (cond
-    (> (:x new-position) (- (:x screen-size) (:x sprite-size))) false
-    (> (:y new-position) (- (:y screen-size) (:y sprite-size))) false
-    (< (:x new-position) 0) false
-    (< (:y new-position) 0) false
-    :else true))
+  (let [hero-width (:x sprite-size)]
+    (cond
+      (and (> (:x new-position) (- config/scroll-point-right hero-width)) (> (:x (:position background)) (* -1 (- config/background-max-width config/screen-width)))) false
+      (and (< (:x new-position) (+ config/scroll-point-left))             (< (:x (:position background)) 0)) false
+      (> (:x new-position) (- (:x screen-size) (:x sprite-size))) false
+      (> (:y new-position) (- (:y screen-size) (:y sprite-size))) false
+      (< (:x new-position) 0) false
+      (< (:y new-position) 0) false
+      :else true)))
 
 (defn proposed-position [hero direction]
   {:pre [(spec/valid? ::hero hero)]}
@@ -105,10 +108,10 @@ effort."
     {:x (+ (:x (:position hero)) x-delta)
      :y (+ (:y (:position hero)) y-delta)} ))
 
-(defn ensure-screen-position [hero direction]
+(defn ensure-screen-position [background hero direction]
   {:pre [(spec/valid? ::hero hero)]}
   ;; keep the hero on-screen
   (let [new-pos (proposed-position hero direction)]
-    (if (move-to? config/screen-size (:size hero) new-pos)
+    (if (move-to? config/screen-size background (:size hero) new-pos)
       new-pos
       (:position hero))))

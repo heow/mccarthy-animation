@@ -68,14 +68,20 @@
               :else x)
      :y (:y pos)}))
 
-(defn scroll [direction background hero-position]
-  (let [pos    hero-position
-        min-x (* -1 (- config/background-max-width config/screen-width))]
-    (cond (and (>= (:x (:position background)) 0)     (= :left direction))  pos ; don't scroll if we hit the limits of the bg
-          (and (<= (:x (:position background)) min-x) (= :right direction)) pos 
-          (= :right direction) {:x (- (:x pos) config/background-scroll-speed) :y (:y pos)} ; move it
-          (= :left  direction) {:x (+ (:x pos) config/background-scroll-speed) :y (:y pos)}
-          :else pos) ))
+(defn scroll [direction background hero thing-pos]
+  (let [back-pos        (:position background)
+        hero-x          (:x (:position hero))
+        hero-width      (:x (:size hero))
+        min-x           (* -1 (- config/background-max-width config/screen-width))]
+    (cond
+      ;; don't scroll if we hit the absolute limits of the bg
+      (and (>= (:x back-pos) 0)     (= :left direction))  thing-pos 
+      (and (<= (:x back-pos) min-x) (= :right direction)) thing-pos
+      ;; do scroll if we're at the scroll point and have background room
+      ;; also consider the wiggle-room of the background-scroll-speed
+      (and (= :right direction) (>= hero-x (- config/scroll-point-right config/background-scroll-speed hero-width)))  {:x (- (:x thing-pos) config/background-scroll-speed) :y (:y thing-pos)} 
+      (and (= :left  direction) (<= hero-x (+ config/scroll-point-left  config/background-scroll-speed)))             {:x (+ (:x thing-pos) config/background-scroll-speed) :y (:y thing-pos)}
+      :else thing-pos) ))
 
 ;; TODO do this for real ...maybe
 (defn collision? [collideables]
@@ -98,15 +104,15 @@
 
     (let [direction (get-direction keystroke)
           hero      (-> (:hero state)
-                        (assoc ,,, :position   (char/ensure-screen-position (:hero state) direction))
+                        (assoc ,,, :position   (char/ensure-screen-position (:background state) (:hero state) direction))
                         (assoc ,,, :halo-angle (+ (:halo-angle (:hero state)) ball/angle-speed))
                         (assoc ,,, :animation  (char/get-animation-state direction)) )
           term      (-> (:term state)
-                        (assoc ,,, :position (scroll direction (:background state) (:position (:term state)))))]
+                        (assoc ,,, :position (scroll direction (:background state) (:hero state) (:position (:term state)))))]
       { ;; build the new state
-       :background (assoc (:background state) :position (ensure-background-position (scroll direction (:background state) (:position (:background state)))))
+       :background (assoc (:background state) :position (ensure-background-position (scroll direction (:background state) (:hero state) (:position (:background state)))))
        :hero       hero
-       :magic-lambdas (map #(assoc % :position (scroll direction (:background state) (ball/aim-at (:position %) (ball/calculate-orbit-target (:hero state) %))))
+       :magic-lambdas (map #(assoc % :position (scroll direction (:background state) (:hero state) (ball/aim-at (:position %) (ball/calculate-orbit-target (:hero state) %))))
                            (:magic-lambdas state))
        :term        term
        :collideables(list hero term)
@@ -160,9 +166,9 @@
         (:magic-lambdas state)))
   
   ;; uncomment to debug"
-  (comment quil/text (str "\n     " (:id (:hero state)) " " (:position (:hero state))
-                  "\n     " (:id (:term state)) " " (:position (:term state))
-                  "\ncol? " (collision? (:collideables state))) 10 280)
+  (comment quil/text (str "\n  hero " (:position (:hero state))
+                          "\n bg    " (:position (:background state))
+                          ) 10 280)
   )
 
 ;; cljs start
