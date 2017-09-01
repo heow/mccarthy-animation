@@ -7,7 +7,7 @@
 (defn create [pos-x pos-y]
   {:id (gensym "term-")
    :image (quil/load-image "resources/terminal.png")
-   :position {:x 200 :y pos-y}
+   :position {:x pos-x :y pos-y}
    :size {:x 64 :y 57} ;; TODO calculate this
    })
 
@@ -29,6 +29,7 @@
     
     ;; third layer is image, with "hole" for screen
     (quil/image (:image term) 0 0 (:x (:size term)) (:y (:size term))) )
+
   ;; sure, make it talk
-  (speech/draw term "hello utoeh untohe unaoh unaoethu noeathu anohu neouhanoth" true)
+  ;(speech/draw term "you have mail" true)
   )

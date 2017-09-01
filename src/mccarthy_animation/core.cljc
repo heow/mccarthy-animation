@@ -149,8 +149,7 @@
                 (get-in hero [:size :y]) )
 
     ;; optional speach bubble
-    ;;    (speech/draw hero (char/select-speech-randomly))
-    (speech/draw hero "hello utao eunaoh unoehu noaehu noaethu noaehu naoehu naoehtu naoeuh neouh nh unetoah u")
+    (speech/draw hero (char/select-speech-randomly))
     )
   
   ;; draw magic lambda balls
