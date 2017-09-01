@@ -3,11 +3,16 @@
             [quil.core :as quil :include-macros true]
             [mccarthy-animation.config :as config]))
 
-(spec/def ::x        int?) ; check overflows elsewhere
-(spec/def ::y        int?) ; check overflows elsewhere
-(spec/def ::position (spec/keys :req [::x ::y]))
-
 (defonce image-keys   [:stand1 :blink1 :tap1 :moveL1 :moveL2 :moveR1 :moveR2])
+
+;; define what it is to be a hero
+(spec/def ::x        int?)
+(spec/def ::y        int?)
+(spec/def ::position (spec/keys :req-un [::x ::y]))
+(spec/def ::size     (spec/keys :req-un [::x ::y]))
+(spec/def ::id       string?)
+(spec/def ::name     string?)
+(spec/def ::hero     (spec/keys :req-un [::name ::position ::size])) ;; TODO why does id fail?
 
 ;; {:stand 1 :move 4}
 (defonce image-counts (frequencies (map #(keyword (apply str (take (- (count (name %)) 1) (name %)))) image-keys)))
@@ -65,20 +70,22 @@ effort."
 
 (defn create
   ([name images initial-x initial-y size-x size-y]
-   {:id (gensym "char-")
-    :name name
-    :images images
-    :animation :stand
-    :position {:x initial-x :y initial-y}
-    :size {:x size-x :y size-y}
-    :speed 2
+   {:id         (gensym "char-")
+    :name       name
+    :images     images
+    :animation  :stand
+    :position   {:x initial-x :y initial-y}
+    :size       {:x size-x    :y size-y}
+    :speed      2
     :halo-angle (rand-int 360)
     })
   ([name initial-x initial-y]
    (create name (load-images) initial-x initial-y (:x config/hero-size) (:y config/hero-size))))
 
 (defn- move-to? [screen-size sprite-size new-position]
-  ;;{:pre [(spec/valid? ::position new-position)]} ; throw on bogus input
+  {:pre [(spec/valid? ::position screen-size)  ; throw on bogus input
+         (spec/valid? ::position sprite-size)
+         (spec/valid? ::position new-position)]}
   (cond
     (> (:x new-position) (- (:x screen-size) (:x sprite-size))) false
     (> (:y new-position) (- (:y screen-size) (:y sprite-size))) false
@@ -87,6 +94,7 @@ effort."
     :else true))
 
 (defn proposed-position [hero direction]
+  {:pre [(spec/valid? ::hero hero)]}
   (let [speed   (:speed hero)
         x-delta (cond (= :right direction)       speed
                       (= :left  direction) (* -1 speed)
@@ -98,6 +106,7 @@ effort."
      :y (+ (:y (:position hero)) y-delta)} ))
 
 (defn ensure-screen-position [hero direction]
+  {:pre [(spec/valid? ::hero hero)]}
   ;; keep the hero on-screen
   (let [new-pos (proposed-position hero direction)]
     (if (move-to? config/screen-size (:size hero) new-pos)
