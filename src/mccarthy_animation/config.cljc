@@ -2,7 +2,7 @@
 
 (defonce screen-size          {:x 320 :y 320})
 (defonce screen-width         (:x screen-size))
-(defonce frame-rate           30)
+(defonce frame-rate           60)
 
 (defonce default-font-size 18)
 
@@ -18,7 +18,7 @@
 (defonce default-stroke-color 0)
 (defonce default-fill-color   255)
 
-(defonce background-scroll-speed 5)
+(defonce background-scroll-speed 2)
 (defonce background-max-width (* 3 screen-width))
 (defonce background-scroll-point 0.15) ;; as % of screen
 

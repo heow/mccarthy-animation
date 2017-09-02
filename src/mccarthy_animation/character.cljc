@@ -76,7 +76,7 @@ effort."
     :animation  :stand
     :position   {:x initial-x :y initial-y}
     :size       {:x 38 :y 50} ;; TODO: calculate this
-    :speed      5
+    :speed      2
     :halo-angle (rand-int 360)
     })
   ([name initial-x initial-y]
