@@ -1,6 +1,7 @@
 (ns mccarthy-animation.character
   (:require [clojure.spec.alpha :as spec]
             [quil.core :as quil :include-macros true]
+            [mccarthy-animation.background :as bg-model]
             [mccarthy-animation.config :as config]))
 
 (defonce image-keys   [:stand1 :blink1 :tap1 :moveL1 :moveL2 :moveR1 :moveR2])
@@ -78,6 +79,7 @@ effort."
     :size       {:x 38 :y 50} ;; TODO: calculate this
     :speed      2
     :halo-angle (rand-int 360)
+    :weight     1
     })
   ([name initial-x initial-y]
    (create name (load-images) initial-x initial-y)))
@@ -108,10 +110,33 @@ effort."
     {:x (+ (:x (:position hero)) x-delta)
      :y (+ (:y (:position hero)) y-delta)} ))
 
+(defn fall? [background hero]
+  {:pre [(spec/valid? ::hero hero)]}
+  (let [feet (+ (get-in hero [:position :y])
+                (get-in hero [:size     :y]))
+
+        ;; in relation to the background (and it's scrolled position)
+        bg-x (+ (:x (:position hero)) (* -1 (:x (:position background))))
+        bg-y (+ (:y (:position hero)) (:y (:size hero)))
+        ]
+    (not (bg-model/is-pixel-solid? bg-x bg-y)) ))
+
+(defn apply-gravity [background hero]
+;  {:pre [(spec/valid? ::hero hero)]}
+  (if (not (fall? background hero))
+    (:position hero)
+    {:x (get-in hero [:position :x])
+     :y (+ (get-in hero [:position :y])
+           (get-in hero [:weight])) } ))
+
 (defn ensure-screen-position [background hero direction]
   {:pre [(spec/valid? ::hero hero)]}
-  ;; keep the hero on-screen
-  (let [new-pos (proposed-position hero direction)]
+  ;; keep the hero on-screen  
+  (let [new-pos (proposed-position (assoc hero :position (apply-gravity background hero)) direction)]
     (if (move-to? config/screen-size background (:size hero) new-pos)
       new-pos
       (:position hero))))
+
+
+
+

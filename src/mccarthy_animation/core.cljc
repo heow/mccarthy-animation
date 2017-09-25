@@ -1,6 +1,7 @@
 (ns mccarthy-animation.core
   #?(:clj (:gen-class))
   #?(:clj (:use [clojure.pprint]))
+  #?(:clj (:require [clojure.tools.nrepl.server :as nrepl]))
   (:require [quil.core                          :as quil :include-macros true]
             [quil.middleware                    :as quilm]
             [mccarthy-animation.config          :as config]
@@ -9,8 +10,9 @@
             [mccarthy-animation.lispm           :as lispm]
             [original-lisp.core                 :as lisp]
             [mccarthy-animation.speech-bubble   :as speech]
-            [mccarthy-animation.terminal        :as term])
-  #?(:clj (:require [clojure.tools.nrepl.server :as nrepl])))
+            [mccarthy-animation.terminal        :as term]
+            [mccarthy-animation.background      :as bg-model]
+            ))
 
 (defn say [list-of-symbols]
   (apply str (interpose " " list-of-symbols)))
@@ -24,18 +26,22 @@
   
   (quil/text-font (quil/create-font config/font config/default-font-size true))
 
+  ;; calculate the solid bits of the background
+  (last (bg-model/work!))
+
   ;; setup function returns initial state. It contains
   ;; circle color and position.
   (let [hero (char/create "fooman" (:x config/hero-init-position) (:y config/hero-init-position) )
         term (term/create -200 250)]
-    {:angle 0
-     :background    {:image (quil/load-image "resources/background.png") :position {:x (* -1 config/screen-width) :y 0}}
-     :hero          hero
-     :magic-lambdas (repeatedly (+ 2 (rand-int 5)) #(ball/create "ball" (:x config/screen-size) (:y config/screen-size)))
-     :term          term
-     :collideables  (list hero term)
-     :lisp-result ""
-     :lisp-time 0 }))
+    {:angle            0
+     :background       {:image (quil/load-image "resources/background.png")
+                        :position {:x (* -1 config/screen-width) :y 0}}
+     :hero             hero
+     :magic-lambdas    (repeatedly (+ 2 (rand-int 5)) #(ball/create "ball" (:x config/screen-size) (:y config/screen-size)))
+     :term             term
+     :collideables     (list hero term)
+     :lisp-result      ""
+     :lisp-time        0 }))
 
 (defn- get-keystroke-or-mouse []
   (cond (quil/key-pressed?) (quil/key-as-keyword)
@@ -102,15 +108,23 @@
         new-lisp-result (if (eval-lisp? state now keystroke) (if (original-lisp.core/atom? new-lisp-script) new-lisp-script (lispm/eval-clojure new-lisp-script)) (:lisp-result state))
         new-lisp-time   (if (eval-lisp? state now keystroke) now (:lisp-time state))]
 
+    ;; build the new state
     (let [direction (get-direction keystroke)
           hero      (-> (:hero state)
                         (assoc ,,, :position   (char/ensure-screen-position (:background state) (:hero state) direction))
                         (assoc ,,, :halo-angle (+ (:halo-angle (:hero state)) ball/angle-speed))
                         (assoc ,,, :animation  (char/get-animation-state direction)) )
           term      (-> (:term state)
-                        (assoc ,,, :position (scroll direction (:background state) (:hero state) (:position (:term state)))))]
-      { ;; build the new state
-       :background (assoc (:background state) :position (ensure-background-position (scroll direction (:background state) (:hero state) (:position (:background state)))))
+                        (assoc ,,, :position (scroll direction (:background state) (:hero state) (:position (:term state)))))
+          ;p         (quil/set-pixel (:image (:background state)) (:x (:position (:hero state))) (+ (:y (:position (:hero state))) (:y (:size (:hero state)))) 0)
+          bg        (-> (:background state)
+                        (assoc ,,, :position (ensure-background-position (scroll direction (:background state) (:hero state) (:position (:background state)))))
+                        ;(assoc ,,, :image (:image (:background state)))
+                        )
+          ]
+      
+      { 
+       :background bg
        :hero       hero
        :magic-lambdas (map #(assoc % :position (scroll direction (:background state) (:hero state) (ball/aim-at (:position %) (ball/calculate-orbit-target (:hero state) %))))
                            (:magic-lambdas state))
@@ -129,8 +143,11 @@
   ;; set default drawing colors
   (quil/stroke config/default-stroke-color) 
   (quil/fill   config/default-fill-color)
-  
-  ;;(js/console.log (str "hero: " (:position (:hero state))))
+
+  ; JS debug
+  ;(js/console.log "pixels: " (.getPixel (.-pixels (:image (:background state) )) 1 1))
+  ;(js/console.log (quil/pixels (quil/load-image "resources/background.png") ))
+  ;(quil/get-pixel (:image (:background state)) (:x (:position (:hero state))) (+ (:y (:position (:hero state))) (:y (:size (:hero state)))))
 
   ;; left aligned, hard-code the sizes in pixels, it's the only way to fly in 1983
   ;; make it vaguely utilitarian by drawing the time
@@ -164,17 +181,30 @@
   (dorun ;; drawing is I/O and is a side-effect, force it to run
    (map #(quil/text "λ" (get-in % [:position :x]) (get-in % [:position :y]))
         (:magic-lambdas state)))
+
+  ;; exercise the plist, force it to not be lazy
+  ;;(if (< (quil/millis) 100) (println (count (bg-model/do-work!))) ) 
   
   ;; uncomment to debug"
-  (comment quil/text (str "\n  hero " (:position (:hero state))
-                          "\n bg    " (:position (:background state))
-                          ) 10 280)
+  (let [bg-x (+ (:x (:position (:hero state))) (* -1 (:x (:position (:background state)))))
+        bg-y (+ (:y (:position (:hero state))) (- (:y (:size (:hero state))) 1))
+        ]
+    (quil/text (str "\n  hero / bg " (:position (:hero state)) " " (:position (:background state))
+                    ;;"\n  first     " (last (bg-model/do-work!))
+                    "\n  count     " (count (bg-model/do-work!))
+                    ;"\n  pixel     " bg-x " " bg-y ": " (bg-model/is-pixel-solid? bg-x bg-y)
+                    ;; "\n  bg-x/y "  bg-x " " bg-y
+                    ;;"\n  firstpx " (bg-model/get-pixel bg-x bg-y)
+                    ;;"\n bg    " (:background-model state)
+                    ;;"\n fpix  " (quil/get-pixel (quil/load-image "resources/background.png") (:x (:position (:hero state))) (+ (:y (:position (:hero state))) (:y (:size (:hero state)))))
+                    ;;"\n fpix  " (quil/get-pixel (:image (:background state)) (:x (:position (:hero state))) (+ (:y (:position (:hero state))) (:y (:size (:hero state)))))
+                    ) 10 280))
   )
 
 ;; cljs start
 ;; TODO think about how to fix this without macros or a real eval
 #?(:cljs
-   (quil/defsketch mccarthy-animation :host (:host config/sketch-opts) :size (:size config/sketch-opts) :setup setup :update update-state :no-start (:no-start config/sketch-opts) :draw draw-state :title (:title config/sketch-opts) :middleware [quilm/fun-mode] ))
+   (quil/defsketch mccarthy-animation :host (:host config/sketch-opts) :size (:size config/sketch-opts) :setup setup :update update-state :no-start (:no-start config/sketch-opts) :draw draw-state :title (:title config/sketch-opts) :middleware [quilm/fun-mode]))
 
 ;; clj application start
 #?(:clj

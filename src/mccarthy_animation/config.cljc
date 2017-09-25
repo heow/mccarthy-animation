@@ -2,7 +2,12 @@
 
 (defonce screen-size          {:x 320 :y 320})
 (defonce screen-width         (:x screen-size))
+(defonce screen-height        (:y screen-size))
+(defonce screen               {:size screen-size})
+
 (defonce frame-rate           60)
+
+
 
 (defonce default-font-size 18)
 
