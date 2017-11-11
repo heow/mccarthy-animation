@@ -85,9 +85,9 @@ effort."
    (create name (load-images) initial-x initial-y)))
 
 (defn- move-to? [screen-size background sprite-size new-position]
-  {:pre [(spec/valid? ::position screen-size)  ; throw on bogus input
-         (spec/valid? ::position sprite-size)
-         (spec/valid? ::position new-position)]}
+;  {:pre [(spec/valid? ::position screen-size)  ; throw on bogus input
+;         (spec/valid? ::position sprite-size)
+;         (spec/valid? ::position new-position)]}
   (let [hero-width (:x sprite-size)]
     (cond
       (and (> (:x new-position) (- config/scroll-point-right hero-width)) (> (:x (:position background)) (* -1 (- config/background-max-width config/screen-width)))) false
@@ -99,7 +99,7 @@ effort."
       :else true)))
 
 (defn proposed-position [hero direction]
-  {:pre [(spec/valid? ::hero hero)]}
+;  {:pre [(spec/valid? ::hero hero)]}
   (let [speed   (:speed hero)
         x-delta (cond (= :right direction)       speed
                       (= :left  direction) (* -1 speed)
@@ -111,15 +111,14 @@ effort."
      :y (+ (:y (:position hero)) y-delta)} ))
 
 (defn fall? [background hero]
-  {:pre [(spec/valid? ::hero hero)]}
-  (let [feet (+ (get-in hero [:position :y])
-                (get-in hero [:size     :y]))
-
-        ;; in relation to the background (and it's scrolled position)
-        bg-x (+ (:x (:position hero)) (* -1 (:x (:position background))))
-        bg-y (+ (:y (:position hero)) (:y (:size hero)))
+;  {:pre [(spec/valid? ::hero hero)]}
+  (let [;; in relation to the background (and it's scrolled position)
+        bg-x-left  (+ (:x (:position hero)) (* -1 (:x (:position background))))
+        bg-x-right (+ (:x (:position hero)) (* -1 (:x (:position background))) (:x (:size hero)))
+        bg-y       (+ (:y (:position hero)) (:y (:size hero)))
         ]
-    (not (bg-model/is-pixel-solid? bg-x bg-y)) ))
+    (not (or (bg-model/is-pixel-solid? bg-x-left  bg-y)
+             (bg-model/is-pixel-solid? bg-x-right bg-y))) ))
 
 (defn apply-gravity [background hero]
 ;  {:pre [(spec/valid? ::hero hero)]}
@@ -130,7 +129,7 @@ effort."
            (get-in hero [:weight])) } ))
 
 (defn ensure-screen-position [background hero direction]
-  {:pre [(spec/valid? ::hero hero)]}
+;  {:pre [(spec/valid? ::hero hero)]}
   ;; keep the hero on-screen  
   (let [new-pos (proposed-position (assoc hero :position (apply-gravity background hero)) direction)]
     (if (move-to? config/screen-size background (:size hero) new-pos)
