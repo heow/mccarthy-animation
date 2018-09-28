@@ -151,13 +151,14 @@
 
   ;; left aligned, hard-code the sizes in pixels, it's the only way to fly in 1983
   ;; make it vaguely utilitarian by drawing the time
-  (quil/text-size 48)
+  (quil/text-size 42)
   (quil/text-align :left)
   (quil/text (str (quil/hour) ":" (let [m (str (quil/minute))] (if (= 1 (count m)) (str "0" m) m))) 25 60)
   
-  (quil/text-size 28)
+  (quil/text-size 14)
   (quil/text-align :right)
-  (quil/text (str (quil/month) "/" (quil/day)) 300 45)
+  (quil/text (str (quil/month) "/" (quil/day)) 310 32)
+  ;(quil/text (str (quil/day)) 300 45) ; day of month only
   (quil/text-align :left)
 
   ;; terminal
@@ -186,7 +187,7 @@
   ;;(if (< (quil/millis) 100) (println (count (bg-model/do-work!))) ) 
   
   ;; uncomment to debug"
-  (let [bg-x (+ (:x (:position (:hero state))) (* -1 (:x (:position (:background state)))))
+  (comment let [bg-x (+ (:x (:position (:hero state))) (* -1 (:x (:position (:background state)))))
         bg-y (+ (:y (:position (:hero state))) (- (:y (:size (:hero state))) 1))
         ]
     (quil/text (str "\n  hero / bg " (:position (:hero state)) " " (:position (:background state))

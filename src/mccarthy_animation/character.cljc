@@ -110,7 +110,10 @@ effort."
     {:x (+ (:x (:position hero)) x-delta)
      :y (+ (:y (:position hero)) y-delta)} ))
 
-(defn fall? [background hero]
+(defn fall? [a b] false)
+
+;; uncomment to turn gravity back on, only a little buggy
+(comment defn fall? [background hero]
 ;  {:pre [(spec/valid? ::hero hero)]}
   (let [;; in relation to the background (and it's scrolled position)
         bg-x-left  (+ (:x (:position hero)) (* -1 (:x (:position background))))
