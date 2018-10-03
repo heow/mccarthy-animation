@@ -9,6 +9,9 @@
                  [org.clojure/tools.nrepl "0.2.12"] ; debug
                  ]
 
+  ;; TODO get rid of this
+  :jvm-opts ["-Duser.timezone=\"America/New_York\""]
+  
   :plugins [[lein-cljsbuild "1.1.5"]]
 
   :main mccarthy-animation.core

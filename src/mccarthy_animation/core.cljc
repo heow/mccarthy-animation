@@ -48,15 +48,26 @@
         (quil/mouse-pressed?) :mouse-click
         :else :none))
 
-(defn- get-direction [keystroke]
+(defn- get-direction [keystroke hero-position]
   ;; convert gaming keys to direction
-  (cond (= keystroke :a) :left
-        (= keystroke :e) :right
+  (let [hero-x (:x hero-position)
+        hero-y (:y hero-position)
+        hero-speed-buf 6 ;; TODO calculate this
+        ]
+    (cond (= keystroke :a) :left
         (= keystroke :d) :right
         (= keystroke :w) :up
         (= keystroke :s) :down
-        :else keystroke
-        ))
+        (= keystroke :mouse-click) (let [mouse-x (quil/mouse-x)
+                                         mouse-y (quil/mouse-y)]
+                                     ;; wait 1/10 of a sec to reduce walk jitter, almost worked
+                                     (if (= 0 (mod (int (/ (quil/millis) 100)) 2))
+                                       (cond (> (- hero-x hero-speed-buf) mouse-x) :left
+                                             (< (+ hero-x hero-speed-buf) mouse-x) :right)
+                                       (cond
+                                             (> (- hero-y hero-speed-buf) mouse-y) :up
+                                             (< (+ hero-y hero-speed-buf) mouse-y) :down) ))
+        :else keystroke)))
 
 ;; Hack to determine when we want to evaluate some lisp, checks to see what we are
 ;; and what we're NOT doing.
@@ -99,6 +110,7 @@
      (and (<=    (:x (:position a)) (+ (:x (:position b))  (:x (:size     b))))
           (>= (+ (:x (:position a))    (:x (:size     a))) (:x (:position b)))) )))
 
+
 (defn update-state [state]
   (let [;; TODO these bits will go away
         now       (quil/millis)
@@ -109,7 +121,7 @@
         new-lisp-time   (if (eval-lisp? state now keystroke) now (:lisp-time state))]
 
     ;; build the new state
-    (let [direction (get-direction keystroke)
+    (let [direction (get-direction keystroke (:position (:hero state)))
           hero      (-> (:hero state)
                         (assoc ,,, :position   (char/ensure-screen-position (:background state) (:hero state) direction))
                         (assoc ,,, :halo-angle (+ (:halo-angle (:hero state)) ball/angle-speed))
@@ -191,8 +203,10 @@
         bg-y (+ (:y (:position (:hero state))) (- (:y (:size (:hero state))) 1))
         ]
     (quil/text (str "\n  hero / bg " (:position (:hero state)) " " (:position (:background state))
+                    "\n mouse-x/y " (quil/mouse-x) " " (quil/mouse-y)
+                    ;;"\n m2        " (get-keystroke-or-mouse)
                     ;;"\n  first     " (last (bg-model/do-work!))
-                    "\n  count     " (count (bg-model/do-work!))
+                    ;;"\n  count     " (count (bg-model/do-work!))
                     ;"\n  pixel     " bg-x " " bg-y ": " (bg-model/is-pixel-solid? bg-x bg-y)
                     ;; "\n  bg-x/y "  bg-x " " bg-y
                     ;;"\n  firstpx " (bg-model/get-pixel bg-x bg-y)
