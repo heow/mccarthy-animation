@@ -1,7 +1,7 @@
 
 ## THE GAME
 
-Not really a game but an ambient experience hence the clock so you can run it all day! Starring John McCarthty in his favorite place: the machine room!
+Not really a game but an ambient experience hence the clock so you can run it all day! Starring John McCarthy in his favorite place: the machine room!
 
 Features:
 * runs on desktop and mobile (read: Clojure and ClojureScript)
@@ -33,13 +33,12 @@ In emacs fun `cider-connect` and point it to port 4006
 
 ## TODO
 
-Maze/worlds
+* add Atari style maze
+* use simple physics from here https://www.toptal.com/game/ultimate-guide-to-processing-simple-game
 
-Steal simple physics from here https://www.toptal.com/game/ultimate-guide-to-processing-simple-game
+## Collisions
 
-Collisions are calculated!
-
-I'm surprised there is no bit-for-bit detection of collisions, the C64 had it built-in and that was forever ago.
+Collisions are calculated!  I'm surprised there is no bit-for-bit detection of collisions, the C64 had it built-in and that was forever ago.
 
 Only 1 game used background color to determine collisions, and it was a slow as when I tried it.
 
